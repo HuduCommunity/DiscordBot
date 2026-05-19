@@ -39,6 +39,7 @@ public class HuduReleaseMonitorService : BackgroundService
 
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("HuduCommunityBot/1.0");
+        _httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,11 +65,16 @@ public class HuduReleaseMonitorService : BackgroundService
         {
             try
             {
+                _logger.LogInformation("Polling Hudu release feed now...");
                 await PollFeedAsync(stoppingToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Hudu release feed poll was canceled before completion; monitor will retry on next interval.");
             }
             catch (Exception ex)
             {
@@ -84,6 +90,8 @@ public class HuduReleaseMonitorService : BackgroundService
         await using var stream = await _httpClient.GetStreamAsync(_config.HuduReleaseMonitor.FeedUrl, cancellationToken);
         var releases = await JsonSerializer.DeserializeAsync<List<HuduReleaseItem>>(stream, cancellationToken: cancellationToken)
             ?? new List<HuduReleaseItem>();
+
+        _logger.LogInformation("Fetched {ReleaseCount} items from Hudu release feed.", releases.Count);
 
         var relevantReleases = releases
             .Where(r => r.Id > 0)
