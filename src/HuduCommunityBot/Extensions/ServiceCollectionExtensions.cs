@@ -115,7 +115,10 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<HeartbeatMonitorService>();
         services.AddHostedService<HaloStatusMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
-        services.AddHostedService<YoutubeMonitorService>();
+        if (botConfig.YoutubeMonitor.Enabled)
+        {
+            services.AddHostedService<YoutubeMonitorService>();
+        }
         services.AddHostedService<HeartbeatMonitorService>();
 
         return services;
