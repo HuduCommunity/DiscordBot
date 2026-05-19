@@ -125,6 +125,11 @@ jobs:
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl=${{ secrets.HUDU_RELEASE_MONITOR_FEED_URL || 'https://hq.hudu.com/public/releases.json' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes=${{ secrets.HUDU_RELEASE_MONITOR_POLL_INTERVAL_MINUTES || '15' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId=${{ secrets.HUDU_RELEASE_MONITOR_BASELINE_RELEASE_ID || '67' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_ENABLED || 'false' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__ChannelId=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_CHANNEL_ID || '0' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__RoleId=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_ROLE_ID || '0' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__FeedUrl=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_FEED_URL || 'https://community.hudu.com/rss/feed' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__PollIntervalMinutes=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_POLL_INTERVAL_MINUTES || '15' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__Enabled=${{ secrets.YOUTUBE_MONITOR_ENABLED || 'false' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__ForumChannelId=${{ secrets.YOUTUBE_FORUM_CHANNEL_ID || '0' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId=${{ secrets.YOUTUBE_MONITOR_ROLE_ID || '0' }}' \

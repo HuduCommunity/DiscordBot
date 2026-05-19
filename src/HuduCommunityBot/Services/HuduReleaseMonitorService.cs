@@ -171,7 +171,8 @@ public class HuduReleaseMonitorService : BackgroundService
 
     private async Task PostReleaseAsync(HuduReleaseItem release)
     {
-        if (await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId) is not IMessageChannel channel)
+        var discordChannel = await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId);
+        if (discordChannel is not IMessageChannel messageChannel)
         {
             _logger.LogWarning(
                 "Hudu release monitor channel {ChannelId} was not found or is not a text channel.",
@@ -199,8 +200,36 @@ public class HuduReleaseMonitorService : BackgroundService
             mentionText = $"<@&{_config.HuduReleaseMonitor.RoleId}>";
         }
 
-        await channel.SendMessageAsync(text: mentionText, embed: embed.Build());
+        var postedMessage = await messageChannel.SendMessageAsync(text: mentionText, embed: embed.Build());
+
+        if (discordChannel is ITextChannel textChannel)
+        {
+            await TryCreateThreadAsync(
+                textChannel,
+                postedMessage,
+                BuildThreadName(release.Name, "Release"),
+                $"Discussion thread for Hudu release {release.Name}:\n{releaseUrl}");
+        }
+
         _logger.LogInformation("Posted Hudu release update for release ID {ReleaseId} ({Version}).", release.Id, release.Name);
+    }
+
+    private async Task TryCreateThreadAsync(ITextChannel channel, IMessage sourceMessage, string threadName, string openerText)
+    {
+        try
+        {
+            var thread = await channel.CreateThreadAsync(
+                name: threadName,
+                type: ThreadType.PublicThread,
+                autoArchiveDuration: ThreadArchiveDuration.OneDay,
+                message: sourceMessage);
+
+            await thread.SendMessageAsync(openerText);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create thread for release message {MessageId} in channel {ChannelId}.", sourceMessage.Id, channel.Id);
+        }
     }
 
     private static string BuildDescription(HuduReleaseItem release)
@@ -252,6 +281,20 @@ public class HuduReleaseMonitorService : BackgroundService
         var normalizedLines = Regex.Replace(normalizedWhitespace, @"\n{3,}", "\n\n");
 
         return normalizedLines.Trim();
+    }
+
+    private static string BuildThreadName(string title, string prefix)
+    {
+        var normalizedTitle = Regex.Replace(title, @"\s+", " ").Trim();
+        if (string.IsNullOrWhiteSpace(normalizedTitle))
+        {
+            normalizedTitle = "Update";
+        }
+
+        var candidate = $"{prefix}: {normalizedTitle}";
+        return candidate.Length <= 100
+            ? candidate
+            : candidate[..100].TrimEnd();
     }
 
     public override void Dispose()

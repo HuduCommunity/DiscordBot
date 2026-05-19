@@ -8,7 +8,8 @@ Discord bot for the Hudu Community server, built with C# (.NET 10) and [Discord.
 * **Moderation tools**: ban, kick, mute, warn, clear, purge, slowmode, lock/unlock
 * **General utilities**: avatar, userinfo, serverinfo, reminders, fun commands, and more
 * **Halo Services status monitor**: polls the [Halo Services Solutions status RSS feed](https://status.haloservicesolutions.com/pages/63ef45da7ee94905308a1a4a/rss) and posts updates to a configured channel
-* **Hudu release monitor**: polls [Hudu releases JSON feed](https://hq.hudu.com/public/releases.json) and posts new stable web releases to a configured channel
+* **Hudu release monitor**: polls [Hudu releases JSON feed](https://hq.hudu.com/public/releases.json), posts new stable web releases, and auto-creates a discussion thread for each release post
+* **Hudu community feed monitor**: polls [Hudu Community RSS feed](https://community.hudu.com/rss/feed), posts new community items, and auto-creates a discussion thread for each post
 * **Permission-aware error handling**: friendly ephemeral responses when permission checks fail
 * **Deployment via GitHub Actions**: CI build gate → SSH deploy to Linux host with systemd
 
@@ -120,6 +121,13 @@ All settings live under the `Bot` key in `appsettings.json`:
       "PollIntervalMinutes": 15,
       "BaselineReleaseId": 67
     },
+    "HuduCommunityFeedMonitor": {
+      "Enabled": false,
+      "ChannelId": 0,
+      "RoleId": 0,
+      "FeedUrl": "https://community.hudu.com/rss/feed",
+      "PollIntervalMinutes": 15
+    },
     "YoutubeMonitor": {
       "Enabled": false,
       "ForumChannelId": 0,
@@ -164,6 +172,23 @@ Set `HuduReleaseMonitor:Enabled` to `true` and configure:
 | `BaselineReleaseId` | Initial last-posted release ID for first run bootstrap (default: 67) |
 
 Release state is persisted in SQLite using `FeedPostState` (`FeedType = HuduRelease`), so the monitor continues from the last posted release ID after restarts.
+
+Each release post also attempts to create a public thread in the same channel for follow-up discussion.
+
+### Hudu Community Feed Monitor
+
+Set `HuduCommunityFeedMonitor:Enabled` to `true` and configure:
+
+| Setting | Description |
+| --- | --- |
+| `ChannelId` | Channel where community feed updates are posted |
+| `RoleId` | Optional role to mention on community updates (set `0` to disable mentions) |
+| `FeedUrl` | Community RSS URL (defaults to `https://community.hudu.com/rss/feed`) |
+| `PollIntervalMinutes` | How often to check for new feed items (default: 15) |
+
+Community feed state is persisted in SQLite using `FeedPostState` (`FeedType = HuduCommunityRss`) with item GUID/link markers.
+
+On first run, the monitor stores the latest current item as baseline to avoid posting historical backlog.
 
 ### YouTube Monitor
 
@@ -232,6 +257,11 @@ HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__RoleId=1234567890
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl=https://hq.hudu.com/public/releases.json
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes=15
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId=67
+HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled=true
+HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__ChannelId=1234567890
+HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__RoleId=1234567890
+HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__FeedUrl=https://community.hudu.com/rss/feed
+HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__PollIntervalMinutes=15
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__Enabled=true
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__ForumChannelId=1234567890
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId=1234567890
@@ -264,6 +294,11 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `HUDU_RELEASE_MONITOR_FEED_URL` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl` |
 | `HUDU_RELEASE_MONITOR_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes` |
 | `HUDU_RELEASE_MONITOR_BASELINE_RELEASE_ID` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId` |
+| `HUDU_COMMUNITY_FEED_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled` |
+| `HUDU_COMMUNITY_FEED_MONITOR_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__ChannelId` |
+| `HUDU_COMMUNITY_FEED_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__RoleId` |
+| `HUDU_COMMUNITY_FEED_MONITOR_FEED_URL` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__FeedUrl` |
+| `HUDU_COMMUNITY_FEED_MONITOR_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__PollIntervalMinutes` |
 | `YOUTUBE_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__Enabled` |
 | `YOUTUBE_FORUM_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__ForumChannelId` |
 | `YOUTUBE_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId` |

@@ -42,6 +42,10 @@ public static class ServiceCollectionExtensions
                     $"Bot:HuduReleaseMonitor:RoleId='{botSection["HuduReleaseMonitor:RoleId"] ?? "<null>"}'",
                     $"Bot:HuduReleaseMonitor:PollIntervalMinutes='{botSection["HuduReleaseMonitor:PollIntervalMinutes"] ?? "<null>"}'",
                     $"Bot:HuduReleaseMonitor:BaselineReleaseId='{botSection["HuduReleaseMonitor:BaselineReleaseId"] ?? "<null>"}'",
+                    $"Bot:HuduCommunityFeedMonitor:Enabled='{botSection["HuduCommunityFeedMonitor:Enabled"] ?? "<null>"}'",
+                    $"Bot:HuduCommunityFeedMonitor:ChannelId='{botSection["HuduCommunityFeedMonitor:ChannelId"] ?? "<null>"}'",
+                    $"Bot:HuduCommunityFeedMonitor:RoleId='{botSection["HuduCommunityFeedMonitor:RoleId"] ?? "<null>"}'",
+                    $"Bot:HuduCommunityFeedMonitor:PollIntervalMinutes='{botSection["HuduCommunityFeedMonitor:PollIntervalMinutes"] ?? "<null>"}'",
                     $"Bot:YoutubeMonitor:Enabled='{botSection["YoutubeMonitor:Enabled"] ?? "<null>"}'",
                     $"Bot:YoutubeMonitor:ForumChannelId='{botSection["YoutubeMonitor:ForumChannelId"] ?? "<null>"}'",
                         $"Bot:YoutubeMonitor:RoleId='{botSection["YoutubeMonitor:RoleId"] ?? "<null>"}'",
@@ -115,6 +119,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<HeartbeatMonitorService>();
         services.AddHostedService<HaloStatusMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
+        services.AddHostedService<HuduCommunityFeedMonitorService>();
         if (botConfig.YoutubeMonitor.Enabled)
         {
             services.AddHostedService<YoutubeMonitorService>();
