@@ -183,27 +183,36 @@ public class DiscordBotService
         // Don't block - register commands asynchronously
         _ = Task.Run(async () =>
         {
-            // Wait a bit for guilds to be available
-            await Task.Delay(2000);
-            
-            _logger.LogInformation("After delay, client has {GuildCount} guilds", _client.Guilds.Count);
-            foreach (var guild in _client.Guilds)
+            try
             {
-                _logger.LogInformation("Guild now available: {GuildName} ({GuildId})", guild.Name, guild.Id);
+                // Wait a bit for guilds to be available
+                await Task.Delay(2000);
+
+                _logger.LogInformation("After delay, client has {GuildCount} guilds", _client.Guilds.Count);
+                foreach (var guild in _client.Guilds)
+                {
+                    _logger.LogInformation("Guild now available: {GuildName} ({GuildId})", guild.Name, guild.Id);
+                }
+
+                if (_config.GuildId.HasValue)
+                {
+                    await _interactionService.RegisterCommandsToGuildAsync(_config.GuildId.Value);
+                    _logger.LogInformation("Slash commands registered to guild {GuildId}", _config.GuildId.Value);
+                }
+                else
+                {
+                    await _interactionService.RegisterCommandsGloballyAsync();
+                    _logger.LogInformation("Slash commands registered globally");
+                }
             }
-            
-            if (_config.GuildId.HasValue)
+            catch (Exception ex)
             {
-                await _interactionService.RegisterCommandsToGuildAsync(_config.GuildId.Value);
-                _logger.LogInformation("Slash commands registered to guild {GuildId}", _config.GuildId.Value);
+                _logger.LogError(ex, "Failed to register slash commands. Background services will still start.");
             }
-            else
+            finally
             {
-                await _interactionService.RegisterCommandsGloballyAsync();
-                _logger.LogInformation("Slash commands registered globally");
+                _readyCompletionSource.TrySetResult(true);
             }
-            
-            _readyCompletionSource.TrySetResult(true);
         });
         
         return Task.CompletedTask;
