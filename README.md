@@ -254,6 +254,7 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `DEPLOY_SSH_KEY` | Used by GitHub Actions SSH setup to connect to the host |
 | `DEPLOY_HOST` | Used by GitHub Actions SSH/rsync/scp target host |
 | `DISCORD_TOKEN` | `HUDUCOMMUNITYBOT_Bot__Token` |
+| `GUILD_ID` | `HUDUCOMMUNITYBOT_Bot__GuildId` |
 | `STATUS_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__StatusMonitor__Enabled` |
 | `STATUS_MONITOR_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__StatusMonitor__ChannelId` |
 | `STATUS_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__StatusMonitor__RoleId` |
