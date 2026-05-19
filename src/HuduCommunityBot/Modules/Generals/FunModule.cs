@@ -3,9 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Options;
 using DiscordBot.Models;
 
 namespace DiscordBot.Commands.Fun;
@@ -16,9 +14,9 @@ public class FunModule : InteractionModuleBase<SocketInteractionContext>
     private static readonly Random _rand = new Random();
     private readonly BotConfig _config;
 
-    public FunModule(IOptions<BotConfig> config)
+    public FunModule(BotConfig config)
     {
-        _config = config.Value;
+        _config = config;
     }
 
     private async Task<bool> CheckChannelAllowed()
