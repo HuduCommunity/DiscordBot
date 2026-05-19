@@ -95,14 +95,6 @@ public class HuduReleaseMonitorService : BackgroundService
 
         _logger.LogInformation("Fetched {ReleaseCount} items from Hudu release feed.", releases.Count);
 
-        // Debug: log top release properties
-        if (releases.Count > 0)
-        {
-            var first = releases[0];
-            _logger.LogInformation("First release: id={Id}, platform={Platform}, release_type={ReleaseType}, draft={Draft}",
-                first.Id, first.Platform ?? "(null)", first.ReleaseType ?? "(null)", first.Draft);
-        }
-
         var relevantReleases = releases
             .Where(r => r.Id > 0)
             .Where(r => !r.Draft)
@@ -111,11 +103,8 @@ public class HuduReleaseMonitorService : BackgroundService
             .OrderBy(r => r.Id)
             .ToList();
 
-        _logger.LogInformation("Found {RelevantCount} stable web releases after filtering.", relevantReleases.Count);
-
         if (relevantReleases.Count == 0)
         {
-            _logger.LogInformation("No new stable web releases found. LastPostedId is likely at or above the current feed max.");
             return;
         }
 
