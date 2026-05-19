@@ -162,7 +162,7 @@ public class HuduReleaseMonitorService : BackgroundService
 
     private async Task PostReleaseAsync(HuduReleaseItem release)
     {
-        if (_client.GetChannel(_config.HuduReleaseMonitor.ChannelId) is not IMessageChannel channel)
+        if (await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId) is not IMessageChannel channel)
         {
             _logger.LogWarning(
                 "Hudu release monitor channel {ChannelId} was not found or is not a text channel.",
