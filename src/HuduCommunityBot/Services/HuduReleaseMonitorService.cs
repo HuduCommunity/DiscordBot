@@ -88,7 +88,8 @@ public class HuduReleaseMonitorService : BackgroundService
     private async Task PollFeedAsync(CancellationToken cancellationToken)
     {
         await using var stream = await _httpClient.GetStreamAsync(_config.HuduReleaseMonitor.FeedUrl, cancellationToken);
-        var releases = await JsonSerializer.DeserializeAsync<List<HuduReleaseItem>>(stream, cancellationToken: cancellationToken)
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var releases = await JsonSerializer.DeserializeAsync<List<HuduReleaseItem>>(stream, options, cancellationToken)
             ?? new List<HuduReleaseItem>();
 
         _logger.LogInformation("Fetched {ReleaseCount} items from Hudu release feed.", releases.Count);
