@@ -94,6 +94,14 @@ public class HuduReleaseMonitorService : BackgroundService
 
         _logger.LogInformation("Fetched {ReleaseCount} items from Hudu release feed.", releases.Count);
 
+        // Debug: log top 3 releases
+        var topReleases = releases.Take(3).ToList();
+        foreach (var r in topReleases)
+        {
+            _logger.LogDebug("Release: id={Id}, name={Name}, platform={Platform}, release_type={ReleaseType}, draft={Draft}",
+                r.Id, r.Name, r.Platform, r.ReleaseType, r.Draft);
+        }
+
         var relevantReleases = releases
             .Where(r => r.Id > 0)
             .Where(r => !r.Draft)
@@ -101,6 +109,8 @@ public class HuduReleaseMonitorService : BackgroundService
             .Where(r => string.Equals(r.Platform, "web", StringComparison.OrdinalIgnoreCase))
             .OrderBy(r => r.Id)
             .ToList();
+
+        _logger.LogInformation("Found {RelevantCount} stable web releases after filtering.", relevantReleases.Count);
 
         if (relevantReleases.Count == 0)
         {
