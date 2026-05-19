@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.WebSocket;
@@ -276,11 +277,19 @@ public class HuduReleaseMonitorService : BackgroundService
         public string Name { get; set; } = string.Empty;
         public string? Headline { get; set; }
         public string? Notes { get; set; }
+
+        [JsonPropertyName("release_type")]
         public string? ReleaseType { get; set; }
+
         public string? Platform { get; set; }
         public bool Draft { get; set; }
+
+        [JsonPropertyName("published_date")]
         public string? PublishedDate { get; set; }
+
+        [JsonPropertyName("created_at")]
         public DateTimeOffset? CreatedAt { get; set; }
+
         public string? Url { get; set; }
     }
 }
