@@ -117,7 +117,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<DiscordBotService>();
         services.AddHttpClient<HeartbeatMonitorService>();
-        services.AddHostedService<HaloStatusMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
         services.AddHostedService<HuduCommunityFeedMonitorService>();
         if (botConfig.YoutubeMonitor.Enabled)

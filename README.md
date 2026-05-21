@@ -7,7 +7,6 @@ Discord bot for the Hudu Community server, built with C# (.NET 10) and [Discord.
 * **Slash commands** via Discord.Net's `InteractionService`
 * **Moderation tools**: ban, kick, mute, warn, clear, purge, slowmode, lock/unlock
 * **General utilities**: avatar, userinfo, serverinfo, reminders, fun commands, and more
-* **Halo Services status monitor**: polls the [Halo Services Solutions status RSS feed](https://status.haloservicesolutions.com/pages/63ef45da7ee94905308a1a4a/rss) and posts updates to a configured channel
 * **Hudu release monitor**: polls [Hudu releases JSON feed](https://hq.hudu.com/public/releases.json), posts new stable web releases, and auto-creates a discussion thread for each release post
 * **Hudu community feed monitor**: polls [Hudu Community RSS feed](https://community.hudu.com/rss/feed), posts new community items, and auto-creates a discussion thread for each post
 * **Permission-aware error handling**: friendly ephemeral responses when permission checks fail
@@ -68,7 +67,6 @@ The bot requires the following permissions (the invite URL should include these)
 | `/ping` | Shows bot latency |
 | `/remind <time> <message>` | Sets a reminder |
 | `/serverinfo` | Shows server information |
-| `/status [private]` | Shows Halo services status overview (public by default, optional private response) |
 | `/userinfo [user]` | Shows information about a user |
 
 ### Moderation
