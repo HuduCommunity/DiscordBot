@@ -161,6 +161,12 @@ public class HuduReleaseMonitorService : BackgroundService
 
         foreach (var release in newReleases)
         {
+            _logger.LogInformation(
+                "Observed Hudu release candidate {ReleaseId} ({Version}) published {PublishedAtUtc}.",
+                release.Id,
+                release.Name,
+                ResolveTimestamp(release).UtcDateTime);
+
             await PostReleaseAsync(release);
 
             state.LastPostedItemId = release.Id.ToString();

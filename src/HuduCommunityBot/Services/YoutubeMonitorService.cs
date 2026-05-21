@@ -383,6 +383,13 @@ public class YoutubeMonitorService : BackgroundService
 
         foreach (var video in pendingVideos)
         {
+            _logger.LogInformation(
+                "Observed YouTube candidate video {VideoId} from {ChannelName} ({ChannelId}) published {PublishedAtUtc}.",
+                video.VideoId,
+                channelName,
+                youtubeChannel.ChannelId,
+                video.PublishedAt.Kind == DateTimeKind.Utc ? video.PublishedAt : video.PublishedAt.ToUniversalTime());
+
             var postTitle = BuildPostTitle(settings, youtubeChannel, channelName, video);
             var roleMention = _config.YoutubeMonitor.RoleId != 0
                 ? $"<@&{_config.YoutubeMonitor.RoleId}>"
