@@ -118,6 +118,7 @@
     "userid",
     "userinfo",
     "usermod",
+    "videotitle",
     "xml"
   ]
 }

@@ -5,6 +5,30 @@ All notable changes to HuduCommunityBot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.14] - 2026-05-19
+
+### Changed
+
+* Add Discord timestamp placeholders for YouTube published date templates
+
+## [1.0.13] - 2026-05-19
+
+### Changed
+
+* Support escaped newline tokens in YouTube title and body templates
+
+## [1.0.12] - 2026-05-19
+
+### Changed
+
+* Add configurable YouTube post body template and placeholders
+
+## [1.0.11] - 2026-05-19
+
+### Changed
+
+* Add YouTube title template placeholders from feed metadata
+
 ## [1.0.10] - 2026-05-19
 
 ### Changed

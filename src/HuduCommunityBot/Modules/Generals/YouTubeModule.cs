@@ -14,11 +14,13 @@ public class YouTubeModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly HuduCommunityBotContext _db;
     private readonly YoutubeChannelSearchService _channelSearchService;
+    private readonly BotConfig _botConfig;
 
-    public YouTubeModule(HuduCommunityBotContext db, YoutubeChannelSearchService channelSearchService)
+    public YouTubeModule(HuduCommunityBotContext db, YoutubeChannelSearchService channelSearchService, BotConfig botConfig)
     {
         _db = db;
         _channelSearchService = channelSearchService;
+        _botConfig = botConfig;
     }
 
     [SlashCommand("set-forum-channel", "Set the forum channel used for YouTube posts")]
@@ -67,7 +69,7 @@ public class YouTubeModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [SlashCommand("set-default-template", "Set the default forum post title template")]
-    public async Task SetDefaultTemplateAsync([Summary("template", "Use {ChannelName} and {VideoTitle} placeholders")] string template)
+    public async Task SetDefaultTemplateAsync([Summary("template", "Use placeholders like {ChannelName}, {VideoTitle}, {VideoId}, {VideoUrl}, {ChannelId}, {PublishedDate}, {PublishedAtUtc}")] string template)
     {
         await DeferAsync(ephemeral: true);
 
@@ -198,7 +200,8 @@ public class YouTubeModule : InteractionModuleBase<SocketInteractionContext>
             .AddField("Enabled", settings.Enabled ? "Yes" : "No", true)
             .AddField("Forum channel", settings.ForumChannelId == 0 ? "Not set" : $"<#{settings.ForumChannelId}>", true)
             .AddField("Poll interval", $"{settings.PollIntervalMinutes} minute(s)", true)
-            .AddField("Default template", settings.DefaultPostTitleTemplate, false);
+            .AddField("Default title template", settings.DefaultPostTitleTemplate, false)
+            .AddField("Default body template", _botConfig.YoutubeMonitor.DefaultPostBodyTemplate, false);
 
         if (channels.Count == 0)
         {

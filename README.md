@@ -201,7 +201,50 @@ Set `YoutubeMonitor:Enabled` to `true` and configure:
 | `YouTubeDataApiKey` | Optional YouTube Data API key used to resolve plain channel names to channel IDs |
 | `PollIntervalMinutes` | Feed polling cadence (default: 15) |
 | `DefaultPostTitleTemplate` | Thread title template (supports `{ChannelName}` and `{VideoTitle}`) |
+| `DefaultPostBodyTemplate` | Forum post body template (supports placeholders listed below; default: `New video from **{ChannelName}**\n{VideoUrl}`) |
 | `Channels` | Optional startup seed list of YouTube channel IDs, @handles, feed URLs, or channel names (channel names require `YouTubeDataApiKey`) |
+
+#### YouTube Title Template Variables
+
+The following placeholders are available in both:
+
+* `DefaultPostTitleTemplate`
+* per-channel `PostTitleTemplate` (for tracked channels)
+* `DefaultPostBodyTemplate`
+
+| Variable | Meaning | Example Value |
+| --- | --- | --- |
+| `{ChannelName}` | Display name of the YouTube channel for the post | `Hudu Community` |
+| `{ChannelId}` | Tracked channel reference (YouTube channel ID) | `UC1234567890abcdef` |
+| `{VideoTitle}` | Title of the YouTube video | `Hudu Version 2.42.1` |
+| `{VideoId}` | YouTube video ID | `dQw4w9WgXcQ` |
+| `{VideoUrl}` | Full YouTube watch URL | `https://www.youtube.com/watch?v=dQw4w9WgXcQ` |
+| `{PublishedDate}` | Video publish date in UTC (`yyyy-MM-dd`) | `2026-05-19` |
+| `{PublishedAtUtc}` | Video publish timestamp in UTC (`yyyy-MM-dd HH:mm:ss UTC`) | `2026-05-19 19:18:45 UTC` |
+| `{PublishedAtDiscord}` | Discord formatted timestamp (`<t:unix:f>`) | `<t:1779227925:f>` |
+| `{PublishedAtDiscordRelative}` | Discord relative timestamp (`<t:unix:R>`) | `<t:1779227925:R>` |
+| `{VideoDescription}` | YouTube video description text | `Patch notes and improvements...` |
+| `{RoleMention}` | Mention text for configured monitor role, or empty when unset | `<@&1234567890>` |
+
+Notes:
+
+* Placeholder replacement is case-insensitive (`{channelname}` and `{videotitle}` also work).
+* Unknown placeholders are left as-is.
+* If a template is empty, the monitor falls back to: `[{ChannelName}] {VideoTitle}`.
+* If `{RoleMention}` is not used in `DefaultPostBodyTemplate`, the role mention is automatically prepended on its own line (when a role is configured), matching current behavior.
+* Escaped newlines in templates are supported (`\\n`, `\\r\\n`, `\\r`) and converted to real line breaks at runtime. This is useful for one-line environment/secret values.
+
+Examples:
+
+* `[{ChannelName}] {VideoTitle}`
+* `{PublishedAtDiscordRelative} | {VideoTitle}`
+* `New upload from {ChannelName}: {VideoTitle} ({VideoUrl})`
+
+Body template examples:
+
+* `New video from **{ChannelName}**\n{VideoUrl}`
+* `{RoleMention}\n**{VideoTitle}**\n{VideoUrl}\nPublished: {PublishedAtDiscord} ({PublishedAtDiscordRelative})`
+* `Channel: {ChannelName} ({ChannelId})\n{VideoTitle}\n{VideoDescription}`
 
 ### Uptime Heartbeat
 
@@ -268,6 +311,7 @@ HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId=1234567890
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__YouTubeDataApiKey=your-youtube-data-api-key
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__PollIntervalMinutes=15
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostTitleTemplate=[{ChannelName}] {VideoTitle}
+HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostBodyTemplate=New video from **{ChannelName}**\n{VideoUrl}
 HUDUCOMMUNITYBOT_Bot__Heartbeat__Enabled=true
 HUDUCOMMUNITYBOT_Bot__Heartbeat__PushUrl=https://kuma.example.com/api/push/xxxxx
 HUDUCOMMUNITYBOT_Bot__Heartbeat__IntervalSeconds=60
@@ -305,6 +349,7 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `YOUTUBE_DATA_API_KEY` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__YouTubeDataApiKey` |
 | `YOUTUBE_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__PollIntervalMinutes` |
 | `YOUTUBE_DEFAULT_POST_TITLE_TEMPLATE` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostTitleTemplate` |
+| `YOUTUBE_DEFAULT_POST_BODY_TEMPLATE` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostBodyTemplate` |
 | `HEARTBEAT_ENABLED` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__Enabled` |
 | `HEARTBEAT_PUSH_URL` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__PushUrl` |
 | `HEARTBEAT_INTERVAL_SECONDS` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__IntervalSeconds` |

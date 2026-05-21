@@ -383,11 +383,11 @@ public class YoutubeMonitorService : BackgroundService
 
         foreach (var video in pendingVideos)
         {
-            var postTitle = BuildPostTitle(settings, youtubeChannel, channelName, video.Title);
-            var mentionPrefix = _config.YoutubeMonitor.RoleId != 0
-                ? $"<@&{_config.YoutubeMonitor.RoleId}>\n"
+            var postTitle = BuildPostTitle(settings, youtubeChannel, channelName, video);
+            var roleMention = _config.YoutubeMonitor.RoleId != 0
+                ? $"<@&{_config.YoutubeMonitor.RoleId}>"
                 : string.Empty;
-            var body = $"{mentionPrefix}New video from **{channelName}**\n{video.Url}";
+            var body = BuildPostBody(youtubeChannel.ChannelId, channelName, video, roleMention);
 
             try
             {
@@ -469,20 +469,82 @@ public class YoutubeMonitorService : BackgroundService
         return existingTag;
     }
 
-    private static string BuildPostTitle(YoutubeMonitorSettings settings, YoutubeTrackedChannel youtubeChannel, string channelName, string videoTitle)
+    private static string BuildPostTitle(YoutubeMonitorSettings settings, YoutubeTrackedChannel youtubeChannel, string channelName, YouTubeVideoEntry video)
     {
         var template = string.IsNullOrWhiteSpace(youtubeChannel.PostTitleTemplate)
             ? settings.DefaultPostTitleTemplate
             : youtubeChannel.PostTitleTemplate!;
 
+        template = NormalizeTemplateNewlines(template);
+
         if (!string.IsNullOrWhiteSpace(template))
         {
+            var publishedAtUtc = video.PublishedAt.Kind == DateTimeKind.Utc
+                ? video.PublishedAt
+                : video.PublishedAt.ToUniversalTime();
+            var publishedUnix = new DateTimeOffset(publishedAtUtc).ToUnixTimeSeconds();
+
             return template
                 .Replace("{ChannelName}", channelName, StringComparison.OrdinalIgnoreCase)
-                .Replace("{VideoTitle}", videoTitle, StringComparison.OrdinalIgnoreCase);
+                .Replace("{ChannelId}", youtubeChannel.ChannelId, StringComparison.OrdinalIgnoreCase)
+                .Replace("{VideoTitle}", video.Title, StringComparison.OrdinalIgnoreCase)
+                .Replace("{VideoId}", video.VideoId, StringComparison.OrdinalIgnoreCase)
+                .Replace("{VideoUrl}", video.Url, StringComparison.OrdinalIgnoreCase)
+                .Replace("{PublishedDate}", publishedAtUtc.ToString("yyyy-MM-dd"), StringComparison.OrdinalIgnoreCase)
+                .Replace("{PublishedAtUtc}", publishedAtUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'"), StringComparison.OrdinalIgnoreCase)
+                .Replace("{PublishedAtDiscord}", $"<t:{publishedUnix}:f>", StringComparison.OrdinalIgnoreCase)
+                .Replace("{PublishedAtDiscordRelative}", $"<t:{publishedUnix}:R>", StringComparison.OrdinalIgnoreCase);
         }
 
-        return $"[{channelName}] {videoTitle}";
+        return $"[{channelName}] {video.Title}";
+    }
+
+    private string BuildPostBody(string channelId, string channelName, YouTubeVideoEntry video, string roleMention)
+    {
+        var template = string.IsNullOrWhiteSpace(_config.YoutubeMonitor.DefaultPostBodyTemplate)
+            ? "New video from **{ChannelName}**\n{VideoUrl}"
+            : _config.YoutubeMonitor.DefaultPostBodyTemplate;
+
+        template = NormalizeTemplateNewlines(template);
+
+        var publishedAtUtc = video.PublishedAt.Kind == DateTimeKind.Utc
+            ? video.PublishedAt
+            : video.PublishedAt.ToUniversalTime();
+        var publishedUnix = new DateTimeOffset(publishedAtUtc).ToUnixTimeSeconds();
+
+        var renderedBody = template
+            .Replace("{ChannelName}", channelName, StringComparison.OrdinalIgnoreCase)
+            .Replace("{ChannelId}", channelId, StringComparison.OrdinalIgnoreCase)
+            .Replace("{VideoTitle}", video.Title, StringComparison.OrdinalIgnoreCase)
+            .Replace("{VideoId}", video.VideoId, StringComparison.OrdinalIgnoreCase)
+            .Replace("{VideoUrl}", video.Url, StringComparison.OrdinalIgnoreCase)
+            .Replace("{PublishedDate}", publishedAtUtc.ToString("yyyy-MM-dd"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{PublishedAtUtc}", publishedAtUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{PublishedAtDiscord}", $"<t:{publishedUnix}:f>", StringComparison.OrdinalIgnoreCase)
+            .Replace("{PublishedAtDiscordRelative}", $"<t:{publishedUnix}:R>", StringComparison.OrdinalIgnoreCase)
+            .Replace("{VideoDescription}", video.Description, StringComparison.OrdinalIgnoreCase)
+            .Replace("{RoleMention}", roleMention, StringComparison.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(roleMention) && !template.Contains("{RoleMention}", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{roleMention}\n{renderedBody}";
+        }
+
+        return renderedBody;
+    }
+
+    private static string NormalizeTemplateNewlines(string template)
+    {
+        if (string.IsNullOrEmpty(template))
+        {
+            return template;
+        }
+
+        // Environment-backed templates are often provided as escaped one-line values.
+        return template
+            .Replace("\\r\\n", "\n", StringComparison.Ordinal)
+            .Replace("\\n", "\n", StringComparison.Ordinal)
+            .Replace("\\r", "\n", StringComparison.Ordinal);
     }
 
     private static string NormalizeForumTagName(string channelName)

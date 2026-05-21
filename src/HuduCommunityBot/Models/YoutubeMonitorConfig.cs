@@ -14,6 +14,8 @@ public class YoutubeMonitorConfig
 
     public string DefaultPostTitleTemplate { get; set; } = "[{ChannelName}] {VideoTitle}";
 
+    public string DefaultPostBodyTemplate { get; set; } = "New video from **{ChannelName}**\n{VideoUrl}";
+
     public List<YoutubeChannelConfig> Channels { get; set; } = new();
 
     /// <summary>
@@ -32,6 +34,9 @@ public class YoutubeMonitorConfig
 
             if (string.IsNullOrWhiteSpace(DefaultPostTitleTemplate))
                 throw new InvalidOperationException("YoutubeMonitorConfig: DefaultPostTitleTemplate cannot be empty.");
+
+            if (string.IsNullOrWhiteSpace(DefaultPostBodyTemplate))
+                throw new InvalidOperationException("YoutubeMonitorConfig: DefaultPostBodyTemplate cannot be empty.");
 
             if (PollIntervalMinutes <= 0)
                 throw new InvalidOperationException($"YoutubeMonitorConfig: PollIntervalMinutes must be greater than 0. Current value: {PollIntervalMinutes}.");
