@@ -1,5 +1,5 @@
 [Unit]
-Description=Halo Community Discord Bot Service
+Description=Hudu Community Discord Bot Service
 After=network-online.target
 Wants=network-online.target
 
