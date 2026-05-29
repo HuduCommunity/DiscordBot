@@ -20,6 +20,8 @@ namespace DiscordBot.Services;
 public class HuduReleaseMonitorService : BackgroundService
 {
     private const string FeedType = "HuduRelease";
+    private static readonly string[] DotZeroSectionOrder = ["New Features", "Improvements", "Bug Fixes"];
+    private static readonly string[] StandardSectionOrder = ["Improvements", "Bug Fixes", "New Features"];
 
     private readonly DiscordSocketClient _client;
     private readonly BotConfig _config;
@@ -190,7 +192,8 @@ public class HuduReleaseMonitorService : BackgroundService
             ? $"https://hq.hudu.com/releases/{release.Id}.json"
             : release.Url.Trim();
 
-        var description = BuildDescription(release);
+        var parsedNotes = ParseReleaseNotes(release);
+        var description = BuildDescription(release, parsedNotes.IntroText);
 
         var embed = new EmbedBuilder()
             .WithTitle($"Hudu Release {release.Name}")
@@ -199,6 +202,8 @@ public class HuduReleaseMonitorService : BackgroundService
             .WithDescription(description)
             .WithFooter("Hudu Releases")
             .WithTimestamp(ResolveTimestamp(release));
+
+        AddSectionFields(embed, release, parsedNotes.Sections);
 
         string? mentionText = null;
         if (_config.HuduReleaseMonitor.RoleId != 0)
@@ -238,24 +243,179 @@ public class HuduReleaseMonitorService : BackgroundService
         }
     }
 
-    private static string BuildDescription(HuduReleaseItem release)
+    private static string BuildDescription(HuduReleaseItem release, string introText)
     {
-        var sourceText = !string.IsNullOrWhiteSpace(release.Headline)
-            ? release.Headline
-            : release.Notes;
-
-        var text = HtmlToPlainText(sourceText);
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrWhiteSpace(introText))
         {
-            text = "A new Hudu release is available.";
+            introText = "A new Hudu release is available.";
         }
 
-        if (text.Length > 900)
+        introText = Truncate(introText, 800);
+
+        return $"**Version:** `{release.Name}`\n**Release ID:** `{release.Id}`\n\n{introText}";
+    }
+
+    private static ParsedReleaseNotes ParseReleaseNotes(HuduReleaseItem release)
+    {
+        var sourceHtml = !string.IsNullOrWhiteSpace(release.Notes)
+            ? release.Notes
+            : release.Headline;
+
+        if (string.IsNullOrWhiteSpace(sourceHtml))
         {
-            text = text[..900].TrimEnd() + "...";
+            return new ParsedReleaseNotes(string.Empty, []);
         }
 
-        return $"**Version:** `{release.Name}`\n**Release ID:** `{release.Id}`\n\n{text}";
+        var sections = new List<ReleaseSection>();
+        var sectionIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        // Parse Trix editor section blocks like: <div><strong>Bug Fixes</strong></div><ul>...</ul>
+        var sectionMatches = Regex.Matches(
+            sourceHtml,
+            @"<div[^>]*>\s*(?:<strong>)?\s*(?<heading>[^<]+?)\s*(?:</strong>)?\s*:?\s*</div>\s*<ul[^>]*>(?<items>.*?)</ul>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        foreach (Match sectionMatch in sectionMatches)
+        {
+            var heading = NormalizeSectionHeading(HtmlToPlainText(sectionMatch.Groups["heading"].Value));
+            var headingKey = heading ?? HtmlToPlainText(sectionMatch.Groups["heading"].Value).Trim();
+            if (string.IsNullOrWhiteSpace(headingKey))
+            {
+                continue;
+            }
+
+            var listItems = new List<string>();
+            var itemMatches = Regex.Matches(
+                sectionMatch.Groups["items"].Value,
+                @"<li[^>]*>(?<item>.*?)</li>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            foreach (Match itemMatch in itemMatches)
+            {
+                var itemText = HtmlToPlainText(itemMatch.Groups["item"].Value);
+                itemText = itemText.Trim().TrimStart('-', '•').Trim();
+                if (!string.IsNullOrWhiteSpace(itemText))
+                {
+                    listItems.Add(itemText);
+                }
+            }
+
+            if (listItems.Count == 0)
+            {
+                continue;
+            }
+
+            if (sectionIndex.TryGetValue(headingKey, out var existingIndex))
+            {
+                sections[existingIndex].Items.AddRange(listItems);
+                continue;
+            }
+
+            sectionIndex[headingKey] = sections.Count;
+            sections.Add(new ReleaseSection(headingKey, listItems));
+        }
+
+        var introHtml = sectionMatches.Count > 0
+            ? sourceHtml[..sectionMatches[0].Index]
+            : sourceHtml;
+        var introText = HtmlToPlainText(introHtml);
+
+        return new ParsedReleaseNotes(introText, sections);
+    }
+
+    private static void AddSectionFields(EmbedBuilder embed, HuduReleaseItem release, IReadOnlyList<ReleaseSection> sections)
+    {
+        if (sections.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var section in GetOrderedSections(release.Name, sections))
+        {
+            embed.AddField(section.Title, BuildSectionFieldValue(section.Items), inline: false);
+        }
+    }
+
+    private static List<ReleaseSection> GetOrderedSections(string? version, IReadOnlyList<ReleaseSection> sections)
+    {
+        var orderedTitles = IsDotZeroRelease(version)
+            ? DotZeroSectionOrder
+            : StandardSectionOrder;
+
+        var remainingSections = new List<ReleaseSection>(sections);
+        var orderedSections = new List<ReleaseSection>(sections.Count);
+
+        foreach (var orderedTitle in orderedTitles)
+        {
+            var section = remainingSections.FirstOrDefault(s =>
+                string.Equals(s.Title, orderedTitle, StringComparison.OrdinalIgnoreCase));
+            if (section is null)
+            {
+                continue;
+            }
+
+            orderedSections.Add(section);
+            remainingSections.Remove(section);
+        }
+
+        orderedSections.AddRange(remainingSections);
+        return orderedSections;
+    }
+
+    private static string BuildSectionFieldValue(IReadOnlyList<string> items)
+    {
+        var content = string.Join("\n", items.Select(item => $"• {item}"));
+        return Truncate(content, 1024);
+    }
+
+    private static string? NormalizeSectionHeading(string heading)
+    {
+        if (string.IsNullOrWhiteSpace(heading))
+        {
+            return null;
+        }
+
+        var normalized = heading.Trim().TrimEnd(':').Trim();
+        if (normalized.StartsWith("new feature", StringComparison.OrdinalIgnoreCase))
+        {
+            return "New Features";
+        }
+
+        if (normalized.StartsWith("improvement", StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith("improved", StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith("changed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Improvements";
+        }
+
+        if (normalized.StartsWith("bug fix", StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith("fix", StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith("fixed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Bug Fixes";
+        }
+
+        return normalized;
+    }
+
+    private static bool IsDotZeroRelease(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return false;
+        }
+
+        return Regex.IsMatch(version.Trim(), @"^\d+\.\d+\.0(?:\D.*)?$");
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        return value[..(maxLength - 3)].TrimEnd() + "...";
     }
 
     private static DateTimeOffset ResolveTimestamp(HuduReleaseItem release)
@@ -330,4 +490,38 @@ public class HuduReleaseMonitorService : BackgroundService
 
         public string? Url { get; set; }
     }
+
+    private sealed record ParsedReleaseNotes(string IntroText, List<ReleaseSection> Sections);
+
+    private sealed class ReleaseSection
+    {
+        public string Title { get; }
+        public List<string> Items { get; }
+
+        public ReleaseSection(string title, List<string> items)
+        {
+            Title = title;
+            Items = items;
+        }
+    }
+
+    internal static ReleaseNotesParseResult ParseReleaseNotesForTests(string version, string? notesHtml, string? headlineHtml = null)
+    {
+        var parsed = ParseReleaseNotes(new HuduReleaseItem
+        {
+            Name = version,
+            Notes = notesHtml,
+            Headline = headlineHtml
+        });
+
+        var ordered = GetOrderedSections(version, parsed.Sections)
+            .Select(section => new ReleaseSectionResult(section.Title, section.Items))
+            .ToList();
+
+        return new ReleaseNotesParseResult(parsed.IntroText, ordered);
+    }
 }
+
+internal sealed record ReleaseNotesParseResult(string IntroText, IReadOnlyList<ReleaseSectionResult> Sections);
+
+internal sealed record ReleaseSectionResult(string Title, IReadOnlyList<string> Items);
