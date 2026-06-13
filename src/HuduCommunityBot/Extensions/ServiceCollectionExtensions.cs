@@ -116,6 +116,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<HuduCommunityBotContext>(options => options.UseSqlite(connectionString));
 
         services.AddSingleton<DiscordBotService>();
+        services.AddSingleton<SingleMessageService>();
         services.AddHttpClient<HeartbeatMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
         services.AddHostedService<HuduCommunityFeedMonitorService>();
