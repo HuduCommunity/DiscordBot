@@ -90,6 +90,12 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(botConfig);
 
+        var modLogConfig = configuration.GetSection("ModerationLog").Get<ModerationLogConfig>() ?? new ModerationLogConfig();
+        services.AddSingleton(modLogConfig);
+
+        var spamConfig = configuration.GetSection("CrossChannelSpam").Get<CrossChannelSpamConfig>() ?? new CrossChannelSpamConfig();
+        services.AddSingleton(spamConfig);
+
         var socketConfig = new DiscordSocketConfig
         {
             // Request only non-privileged intents by default to avoid gateway close 4014.
@@ -99,7 +105,8 @@ public static class ServiceCollectionExtensions
             GatewayIntents = GatewayIntents.Guilds |
                              GatewayIntents.GuildMessages |
                              GatewayIntents.GuildMessageReactions |
-                             GatewayIntents.DirectMessages,
+                             GatewayIntents.DirectMessages |
+                             GatewayIntents.MessageContent,
             LogLevel = LogSeverity.Info
         };
         services.AddSingleton(socketConfig);
@@ -117,6 +124,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<DiscordBotService>();
         services.AddSingleton<SingleMessageService>();
+        services.AddSingleton<ModerationLogService>();
+        services.AddSingleton<CrossChannelSpamDetector>();
         services.AddHttpClient<HeartbeatMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
         services.AddHostedService<HuduCommunityFeedMonitorService>();
