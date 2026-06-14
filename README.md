@@ -9,6 +9,7 @@ Discord bot for the Hudu Community server, built with C# (.NET 10) and [Discord.
 * **General utilities**: avatar, userinfo, serverinfo, reminders, fun commands, and more
 * **Hudu release monitor**: polls [Hudu releases JSON feed](https://hq.hudu.com/public/releases.json), posts new stable web releases, and auto-creates a discussion thread for each release post
 * **Hudu community feed monitor**: polls [Hudu Community RSS feed](https://community.hudu.com/rss/feed), posts new community items, and auto-creates a discussion thread for each post
+* **Single-message channel enforcement**: restricts designated channels to one message per user, with slash commands to enable/disable enforcement and reset individual users
 * **Permission-aware error handling**: friendly ephemeral responses when permission checks fail
 * **Deployment via GitHub Actions**: CI build gate → SSH deploy to Linux host with systemd
 
@@ -88,6 +89,19 @@ The bot requires the following permissions (the invite URL should include these)
 
 > **Note:** `/warn` auto-kicks a user after 3 accumulated warnings.
 
+### Single-Message Enforcement
+
+These commands require the **Manage Channels** permission.
+
+| Command | Description |
+| --- | --- |
+| `/singlemessage enable [channel]` | Enable single-message enforcement for a channel (defaults to current channel) |
+| `/singlemessage disable [channel]` | Disable enforcement for a channel; existing records are retained |
+| `/singlemessage reset-user <user> [channel]` | Remove a user's record so they may post again |
+| `/singlemessage list [channel]` | List all users who have posted in the channel, with links to their messages |
+
+Channels must be pre-registered in `SingleMessage:Channels` config before enforcement can be enabled via slash command.
+
 ## ⚙️ Configuration
 
 All settings live under the `Bot` key in `appsettings.json`:
@@ -141,6 +155,9 @@ All settings live under the `Bot` key in `appsettings.json`:
       "IntervalSeconds": 60,
       "StartupDelaySeconds": 15,
       "TimeoutSeconds": 10
+    },
+    "SingleMessage": {
+      "Channels": []
     }
   }
 }
@@ -243,6 +260,27 @@ Body template examples:
 * `New video from **{ChannelName}**\n{VideoUrl}`
 * `{RoleMention}\n**{VideoTitle}**\n{VideoUrl}\nPublished: {PublishedAtDiscord} ({PublishedAtDiscordRelative})`
 * `Channel: {ChannelName} ({ChannelId})\n{VideoTitle}\n{VideoDescription}`
+
+### Single-Message Channels
+
+Register channels that should allow only one message per user. Channels must be listed here before `/singlemessage enable` will accept them.
+
+```json
+{
+  "SingleMessage": {
+    "Channels": [
+      { "ChannelId": 1234567890123456789, "ScanHistoryOnEnable": false }
+    ]
+  }
+}
+```
+
+| Setting | Description |
+| --- | --- |
+| `ChannelId` | Discord channel ID to register for single-message enforcement |
+| `ScanHistoryOnEnable` | When `true`, scans the last 100 messages on enable to pre-populate existing posters (default: `false`) |
+
+Note: `SingleMessage:Channels` is an array and is best managed in `appsettings.json` rather than environment variables.
 
 ### Uptime Heartbeat
 
