@@ -485,3 +485,5 @@ $RECYCLE.BIN/
 *.swp
 .azure
 src/HuduCommunityBot/huducommunitybot.db
+src/HuduCommunityBot/huducommunitybot.db-shm
+src/HuduCommunityBot/huducommunitybot.db-wal
