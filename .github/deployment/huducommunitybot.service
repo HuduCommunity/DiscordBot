@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=halobot
-Group=halobot
+User=hudubot
+Group=hudubot
 WorkingDirectory=/opt/huducommunitybot
 ExecStart=/opt/huducommunitybot/HuduCommunityBot
 Restart=on-failure

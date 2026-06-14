@@ -19,10 +19,10 @@ sudo usermod -aG sudo deployer
 
 ### 1.1 Create Runtime User
 
-The service runs as a dedicated non-login account named `halobot`.
+The service runs as a dedicated non-login account named `hudubot`.
 
 ```bash
-sudo useradd -r -s /usr/sbin/nologin halobot
+sudo useradd -r -s /usr/sbin/nologin hudubot
 ```
 
 ### 2. Setup Directory Structure
@@ -181,14 +181,14 @@ ls -la /opt/huducommunitybot/.env
 ### Permission denied errors
 
 ```bash
-sudo chown -R halobot:halobot /opt/huducommunitybot
+sudo chown -R hudubot:hudubot /opt/huducommunitybot
 ```
 
 ### Check runtime user exists
 
 ```bash
-id halobot
-getent passwd halobot
+id hudubot
+getent passwd hudubot
 ```
 
 ### Check if .NET is installed
