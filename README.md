@@ -10,6 +10,8 @@ Discord bot for the Hudu Community server, built with C# (.NET 10) and [Discord.
 * **Hudu release monitor**: polls [Hudu releases JSON feed](https://hq.hudu.com/public/releases.json), posts new stable web releases, and auto-creates a discussion thread for each release post
 * **Hudu community feed monitor**: polls [Hudu Community RSS feed](https://community.hudu.com/rss/feed), posts new community items, and auto-creates a discussion thread for each post
 * **Single-message channel enforcement**: restricts designated channels to one message per user, with slash commands to enable/disable enforcement and reset individual users
+* **Moderation action logging**: posts a rich embed to a configured forum channel for every moderation action (ban, unban, kick, mute, unmute, warn, clear, purge, lock/unlock, slowmode, and automated single-message deletions)
+* **Cross-channel spam detection**: flags users who post identical messages across multiple channels within a configurable time window, alerting moderators with interactive ban/dismiss buttons
 * **Permission-aware error handling**: friendly ephemeral responses when permission checks fail
 * **Deployment via GitHub Actions**: CI build gate → SSH deploy to Linux host with systemd
 
@@ -54,6 +56,9 @@ The bot requires the following permissions (the invite URL should include these)
 * Ban Members
 * Moderate Members (for timeout/mute)
 * Manage Channels (for lock/slowmode)
+* Create Public Threads (for moderation log forum posts)
+
+> **Note:** The **Message Content** privileged intent must be enabled in the [Discord Developer Portal](https://discord.com/developers/applications) for the single-message enforcement and cross-channel spam detection features to function. Restart the bot after enabling it — no token refresh is required.
 
 ## 📖 Commands
 
@@ -159,6 +164,15 @@ All settings live under the `Bot` key in `appsettings.json`:
     "SingleMessage": {
       "Channels": []
     }
+  },
+  "ModerationLog": {
+    "ForumChannelId": 0,
+    "ModeratorRoleId": 0
+  },
+  "CrossChannelSpam": {
+    "Enabled": false,
+    "TimeWindowSeconds": 30,
+    "MinimumChannelCount": 3
   }
 }
 ```
@@ -282,6 +296,29 @@ Register channels that should allow only one message per user. Channels must be 
 
 Note: `SingleMessage:Channels` is an array and is best managed in `appsettings.json` rather than environment variables.
 
+### Moderation Action Logging
+
+All moderation actions are logged as rich embeds to a Discord forum channel. Each embed shows the action type, the target user, the moderator, and the reason.
+
+> **Note:** `ModerationLog` is a root-level config section, not nested under `Bot`.
+
+| Setting | Description |
+| --- | --- |
+| `ForumChannelId` | Forum channel ID where moderation log threads are created (`0` = disabled) |
+| `ModeratorRoleId` | Optional role to mention in log posts (`0` = no mention) |
+
+### Cross-Channel Spam Detection
+
+Detects users who send identical messages across multiple channels within a short time window. When triggered, a spam alert is posted to the moderation log forum channel with **Ban** and **Dismiss** buttons for moderators. Requires the **Message Content** privileged intent (see [Required Bot Permissions](#required-bot-permissions)).
+
+> **Note:** `CrossChannelSpam` is a root-level config section, not nested under `Bot`.
+
+| Setting | Description |
+| --- | --- |
+| `Enabled` | Enable cross-channel spam detection (default: `false`) |
+| `TimeWindowSeconds` | Sliding window duration in seconds (default: `30`) |
+| `MinimumChannelCount` | Minimum number of distinct channels before a detection fires (default: `3`) |
+
 ### Uptime Heartbeat
 
 Set `Heartbeat:Enabled` to `true` and configure:
@@ -353,6 +390,11 @@ HUDUCOMMUNITYBOT_Bot__Heartbeat__PushUrl=https://kuma.example.com/api/push/xxxxx
 HUDUCOMMUNITYBOT_Bot__Heartbeat__IntervalSeconds=60
 HUDUCOMMUNITYBOT_Bot__Heartbeat__StartupDelaySeconds=15
 HUDUCOMMUNITYBOT_Bot__Heartbeat__TimeoutSeconds=10
+HUDUCOMMUNITYBOT_ModerationLog__ForumChannelId=1234567890
+HUDUCOMMUNITYBOT_ModerationLog__ModeratorRoleId=1234567890
+HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled=false
+HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds=30
+HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount=3
 ```
 
 ### GitHub Secrets (Deploy Workflow)
@@ -391,6 +433,11 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `HEARTBEAT_INTERVAL_SECONDS` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__IntervalSeconds` |
 | `HEARTBEAT_STARTUP_DELAY_SECONDS` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__StartupDelaySeconds` |
 | `HEARTBEAT_TIMEOUT_SECONDS` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__TimeoutSeconds` |
+| `MODERATION_LOG_FORUM_CHANNEL_ID` | `HUDUCOMMUNITYBOT_ModerationLog__ForumChannelId` |
+| `MODERATION_LOG_MODERATOR_ROLE_ID` | `HUDUCOMMUNITYBOT_ModerationLog__ModeratorRoleId` |
+| `CROSS_CHANNEL_SPAM_ENABLED` | `HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled` |
+| `CROSS_CHANNEL_SPAM_TIME_WINDOW_SECONDS` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds` |
+| `CROSS_CHANNEL_SPAM_MINIMUM_CHANNEL_COUNT` | `HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount` |
 
 Note: `YoutubeMonitor:Channels` is best managed through `/youtube add` and persisted in SQLite, instead of storing an array in secrets.
 
