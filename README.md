@@ -257,7 +257,7 @@ The following placeholders are available in both:
 
 Notes:
 
-* Placeholder replacement is case-insensitive (`{channelname}` and `{videotitle}` also work).
+* Placeholder names are case-insensitive.
 * Unknown placeholders are left as-is.
 * If a template is empty, the monitor falls back to: `[{ChannelName}] {VideoTitle}`.
 * If `{RoleMention}` is not used in `DefaultPostBodyTemplate`, the role mention is automatically prepended on its own line (when a role is configured), matching current behavior.
