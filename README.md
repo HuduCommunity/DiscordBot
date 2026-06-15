@@ -473,6 +473,16 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `CROSS_CHANNEL_SPAM_ENABLED` | `HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled` |
 | `CROSS_CHANNEL_SPAM_TIME_WINDOW_SECONDS` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds` |
 | `CROSS_CHANNEL_SPAM_MINIMUM_CHANNEL_COUNT` | `HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount` |
+| `MODERATION_EXEMPT_USER_ID_0` | `HUDUCOMMUNITYBOT_ModerationExemptions__ExemptUserIds__0` |
+| `MODERATION_EXEMPT_ROLE_ID_0` | `HUDUCOMMUNITYBOT_ModerationExemptions__ExemptRoleIds__0` |
+| `COMMAND_ACCESS_DISABLE_ALL_FUN_COMMANDS` | `HUDUCOMMUNITYBOT_CommandAccess__DisableAllFunCommands` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_0` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__0` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_1` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__1` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_2` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__2` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_3` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__3` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_4` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__4` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_5` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__5` |
+| `COMMAND_ACCESS_DISABLED_COMMAND_6` | `HUDUCOMMUNITYBOT_CommandAccess__DisabledCommands__6` |
 
 Note: `YoutubeMonitor:Channels` is best managed through `/youtube add` and persisted in SQLite, instead of storing an array in secrets.
 
