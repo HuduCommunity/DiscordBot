@@ -5,6 +5,12 @@ All notable changes to HuduCommunityBot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-06-15
+
+### Fixed
+
+* Hudu release feed HTTP timeouts are now logged at `Information` instead of `Warning` — these are transient retryable failures from a slow external endpoint and do not warrant warning-level noise
+
 ## [1.2.2] - 2026-06-15
 
 ### Fixed

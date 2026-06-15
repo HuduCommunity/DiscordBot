@@ -77,7 +77,7 @@ public class HuduReleaseMonitorService : BackgroundService
             }
             catch (OperationCanceledException ex)
             {
-                _logger.LogWarning(ex, "Hudu release feed poll was canceled before completion; monitor will retry on next interval.");
+                _logger.LogInformation(ex, "Hudu release feed poll timed out or was canceled; monitor will retry on next interval.");
             }
             catch (Exception ex)
             {
