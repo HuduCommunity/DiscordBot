@@ -96,6 +96,12 @@ public static class ServiceCollectionExtensions
         var spamConfig = configuration.GetSection("CrossChannelSpam").Get<CrossChannelSpamConfig>() ?? new CrossChannelSpamConfig();
         services.AddSingleton(spamConfig);
 
+        var moderationExemptionsConfig = configuration.GetSection("ModerationExemptions").Get<ModerationExemptionsConfig>() ?? new ModerationExemptionsConfig();
+        services.AddSingleton(moderationExemptionsConfig);
+
+        var commandAccessConfig = configuration.GetSection("CommandAccess").Get<CommandAccessConfig>() ?? new CommandAccessConfig();
+        services.AddSingleton(commandAccessConfig);
+
         var socketConfig = new DiscordSocketConfig
         {
             // Request only non-privileged intents by default to avoid gateway close 4014.
@@ -123,6 +129,8 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<HuduCommunityBotContext>(options => options.UseSqlite(connectionString));
 
         services.AddSingleton<DiscordBotService>();
+        services.AddSingleton<CommandAccessService>();
+        services.AddSingleton<ModerationExemptionService>();
         services.AddSingleton<SingleMessageService>();
         services.AddSingleton<ModerationLogService>();
         services.AddSingleton<CrossChannelSpamDetector>();
