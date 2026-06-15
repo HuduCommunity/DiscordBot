@@ -170,7 +170,9 @@ All settings live under the `Bot` key in `appsettings.json`:
   "CrossChannelSpam": {
     "Enabled": false,
     "TimeWindowSeconds": 30,
-    "MinimumChannelCount": 3
+    "MinimumChannelCount": 3,
+    "DeleteMessages": true,
+    "TimeoutOnDetection": true
   }
 }
 ```
@@ -316,6 +318,8 @@ Detects users who send identical messages across multiple channels within a shor
 | `Enabled` | Enable cross-channel spam detection (default: `false`) |
 | `TimeWindowSeconds` | Sliding window duration in seconds (default: `30`) |
 | `MinimumChannelCount` | Minimum number of distinct channels before a detection fires (default: `3`) |
+| `DeleteMessages` | Delete detected spam messages (requires Manage Messages). Default: `true` |
+| `TimeoutOnDetection` | Apply a 28-day timeout to the spammer (requires Moderate Members). Default: `true` |
 
 ### Uptime Heartbeat
 
@@ -393,6 +397,8 @@ HUDUCOMMUNITYBOT_ModerationLog__ModeratorRoleId=1234567890
 HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled=false
 HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds=30
 HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount=3
+HUDUCOMMUNITYBOT_CrossChannelSpam__DeleteMessages=true
+HUDUCOMMUNITYBOT_CrossChannelSpam__TimeoutOnDetection=true
 ```
 
 #### Moderation Exemptions Configuration
@@ -473,6 +479,8 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `CROSS_CHANNEL_SPAM_ENABLED` | `HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled` |
 | `CROSS_CHANNEL_SPAM_TIME_WINDOW_SECONDS` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds` |
 | `CROSS_CHANNEL_SPAM_MINIMUM_CHANNEL_COUNT` | `HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount` |
+| `CROSS_CHANNEL_SPAM_DELETE_MESSAGES` | `HUDUCOMMUNITYBOT_CrossChannelSpam__DeleteMessages` |
+| `CROSS_CHANNEL_SPAM_TIMEOUT_ON_DETECTION` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeoutOnDetection` |
 | `MODERATION_EXEMPT_USER_ID_0` | `HUDUCOMMUNITYBOT_ModerationExemptions__ExemptUserIds__0` |
 | `MODERATION_EXEMPT_ROLE_ID_0` | `HUDUCOMMUNITYBOT_ModerationExemptions__ExemptRoleIds__0` |
 | `COMMAND_ACCESS_DISABLE_ALL_FUN_COMMANDS` | `HUDUCOMMUNITYBOT_CommandAccess__DisableAllFunCommands` |
