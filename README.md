@@ -476,6 +476,11 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `HEARTBEAT_TIMEOUT_SECONDS` | `HUDUCOMMUNITYBOT_Bot__Heartbeat__TimeoutSeconds` |
 | `MODERATION_LOG_FORUM_CHANNEL_ID` | `HUDUCOMMUNITYBOT_ModerationLog__ForumChannelId` |
 | `MODERATION_LOG_MODERATOR_ROLE_ID` | `HUDUCOMMUNITYBOT_ModerationLog__ModeratorRoleId` |
+| `MODERATION_LOG_EVENT_AUDIT_ENABLED` | `HUDUCOMMUNITYBOT_ModerationLog__EventAuditEnabled` |
+| `MODERATION_LOG_EVENT_AUDIT_CHANNEL_ID` | `HUDUCOMMUNITYBOT_ModerationLog__EventAuditChannelId` |
+| `MODERATION_LOG_EVENT_AUDIT_LOG_MESSAGE_DELETES` | `HUDUCOMMUNITYBOT_ModerationLog__LogMessageDeletes` |
+| `MODERATION_LOG_EVENT_AUDIT_LOG_MEMBER_LEAVES` | `HUDUCOMMUNITYBOT_ModerationLog__LogMemberLeaves` |
+| `MODERATION_LOG_AUDIT_LOG_LOOKBACK_SECONDS` | `HUDUCOMMUNITYBOT_ModerationLog__AuditLogLookbackSeconds` |
 | `CROSS_CHANNEL_SPAM_ENABLED` | `HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled` |
 | `CROSS_CHANNEL_SPAM_TIME_WINDOW_SECONDS` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds` |
 | `CROSS_CHANNEL_SPAM_MINIMUM_CHANNEL_COUNT` | `HUDUCOMMUNITYBOT_CrossChannelSpam__MinimumChannelCount` |

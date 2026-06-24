@@ -102,17 +102,24 @@ public static class ServiceCollectionExtensions
         var commandAccessConfig = configuration.GetSection("CommandAccess").Get<CommandAccessConfig>() ?? new CommandAccessConfig();
         services.AddSingleton(commandAccessConfig);
 
+        var gatewayIntents = GatewayIntents.Guilds |
+                             GatewayIntents.GuildMessages |
+                             GatewayIntents.GuildMessageReactions |
+                             GatewayIntents.DirectMessages |
+                             GatewayIntents.MessageContent;
+
+        if (modLogConfig.EventAuditEnabled && modLogConfig.LogMemberLeaves)
+        {
+            gatewayIntents |= GatewayIntents.GuildMembers;
+        }
+
         var socketConfig = new DiscordSocketConfig
         {
             // Request only non-privileged intents by default to avoid gateway close 4014.
             // This keeps slash-command bot startup resilient even when privileged intents
             // are not enabled in the Discord developer portal.
             AlwaysDownloadUsers = false,
-            GatewayIntents = GatewayIntents.Guilds |
-                             GatewayIntents.GuildMessages |
-                             GatewayIntents.GuildMessageReactions |
-                             GatewayIntents.DirectMessages |
-                             GatewayIntents.MessageContent,
+            GatewayIntents = gatewayIntents,
             LogLevel = LogSeverity.Info
         };
         services.AddSingleton(socketConfig);
@@ -134,6 +141,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SingleMessageService>();
         services.AddSingleton<ModerationLogService>();
         services.AddSingleton<CrossChannelSpamDetector>();
+        services.AddSingleton<EventAuditLogService>();
         services.AddHttpClient<HeartbeatMonitorService>();
         services.AddHostedService<HuduReleaseMonitorService>();
         services.AddHostedService<HuduCommunityFeedMonitorService>();
