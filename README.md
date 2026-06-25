@@ -480,6 +480,9 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `MODERATION_LOG_EVENT_AUDIT_CHANNEL_ID` | `HUDUCOMMUNITYBOT_ModerationLog__EventAuditChannelId` |
 | `MODERATION_LOG_EVENT_AUDIT_LOG_MESSAGE_DELETES` | `HUDUCOMMUNITYBOT_ModerationLog__LogMessageDeletes` |
 | `MODERATION_LOG_EVENT_AUDIT_LOG_MEMBER_LEAVES` | `HUDUCOMMUNITYBOT_ModerationLog__LogMemberLeaves` |
+| `MODERATION_LOG_EVENT_AUDIT_LOG_MEMBER_JOINS` | `HUDUCOMMUNITYBOT_ModerationLog__LogMemberJoins` |
+| `MODERATION_LOG_IGNORED_USER_ID_0` | `HUDUCOMMUNITYBOT_ModerationLog__IgnoredUserIds__0` |
+| `MODERATION_LOG_IGNORED_USER_ID_1` | `HUDUCOMMUNITYBOT_ModerationLog__IgnoredUserIds__1` |
 | `MODERATION_LOG_AUDIT_LOG_LOOKBACK_SECONDS` | `HUDUCOMMUNITYBOT_ModerationLog__AuditLogLookbackSeconds` |
 | `CROSS_CHANNEL_SPAM_ENABLED` | `HUDUCOMMUNITYBOT_CrossChannelSpam__Enabled` |
 | `CROSS_CHANNEL_SPAM_TIME_WINDOW_SECONDS` | `HUDUCOMMUNITYBOT_CrossChannelSpam__TimeWindowSeconds` |
