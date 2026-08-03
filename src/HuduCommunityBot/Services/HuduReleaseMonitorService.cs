@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Core.Data;
@@ -191,9 +192,10 @@ public class HuduReleaseMonitorService : BackgroundService
         var releaseUrl = string.IsNullOrWhiteSpace(release.Url)
             ? $"https://hq.hudu.com/releases/{release.Id}.json"
             : release.Url.Trim();
+        var communityPost = await TryFindCommunityReleasePostAsync(release);
 
         var parsedNotes = ParseReleaseNotes(release);
-        var description = BuildDescription(release, parsedNotes.IntroText);
+        var description = BuildDescription(release, parsedNotes.IntroText, communityPost?.Link);
 
         var embed = new EmbedBuilder()
             .WithTitle($"Hudu Release {release.Name}")
@@ -219,10 +221,46 @@ public class HuduReleaseMonitorService : BackgroundService
                 textChannel,
                 postedMessage,
                 BuildThreadName(release.Name, "Release"),
-                $"Discussion thread for Hudu release {release.Name}:\n{releaseUrl}");
+                BuildThreadOpenerText(release, releaseUrl, communityPost));
         }
 
         _logger.LogInformation("Posted Hudu release update for release ID {ReleaseId} ({Version}).", release.Id, release.Name);
+    }
+
+    private async Task<HuduCommunityPostMatch?> TryFindCommunityReleasePostAsync(HuduReleaseItem release)
+    {
+        var feedUrl = _config.HuduCommunityFeedMonitor.FeedUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(feedUrl) || !Uri.TryCreate(feedUrl, UriKind.Absolute, out _))
+        {
+            return null;
+        }
+
+        try
+        {
+            var xml = await _httpClient.GetStringAsync(feedUrl);
+            var doc = XDocument.Parse(xml);
+            var items = ParseCommunityItems(doc);
+            var matchedItem = FindMatchingCommunityPost(release.Name, items);
+            if (matchedItem is null)
+            {
+                _logger.LogInformation(
+                    "No matching Hudu Community release post found for version {Version}.",
+                    release.Name);
+                return null;
+            }
+
+            _logger.LogInformation(
+                "Matched Hudu Community release post for version {Version}: {CommunityPostUrl}",
+                release.Name,
+                matchedItem.Link);
+
+            return matchedItem;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve Hudu Community release post for version {Version}.", release.Name);
+            return null;
+        }
     }
 
     private async Task TryCreateThreadAsync(ITextChannel channel, IMessage sourceMessage, string threadName, string openerText)
@@ -243,7 +281,7 @@ public class HuduReleaseMonitorService : BackgroundService
         }
     }
 
-    private static string BuildDescription(HuduReleaseItem release, string introText)
+    private static string BuildDescription(HuduReleaseItem release, string introText, string? communityPostUrl)
     {
         if (string.IsNullOrWhiteSpace(introText))
         {
@@ -252,7 +290,21 @@ public class HuduReleaseMonitorService : BackgroundService
 
         introText = Truncate(introText, 800);
 
-        return $"**Version:** `{release.Name}`\n**Release ID:** `{release.Id}`\n\n{introText}";
+        var communityLine = string.IsNullOrWhiteSpace(communityPostUrl)
+            ? string.Empty
+            : $"\n**Community Post:** {communityPostUrl}";
+
+        return $"**Version:** `{release.Name}`\n**Release ID:** `{release.Id}`{communityLine}\n\n{introText}";
+    }
+
+    private static string BuildThreadOpenerText(HuduReleaseItem release, string releaseUrl, HuduCommunityPostMatch? communityPost)
+    {
+        if (communityPost is null)
+        {
+            return $"Discussion thread for Hudu release {release.Name}:\n{releaseUrl}";
+        }
+
+        return $"Discussion thread for Hudu release {release.Name}:\nRelease notes: {releaseUrl}\nCommunity post: {communityPost.Link}";
     }
 
     private static ParsedReleaseNotes ParseReleaseNotes(HuduReleaseItem release)
@@ -449,6 +501,84 @@ public class HuduReleaseMonitorService : BackgroundService
         return normalizedLines.Trim();
     }
 
+    private static List<HuduCommunityPostMatch> ParseCommunityItems(XDocument doc)
+    {
+        var items = new List<HuduCommunityPostMatch>();
+
+        foreach (var itemElement in doc.Descendants("item"))
+        {
+            var title = itemElement.Element("title")?.Value?.Trim();
+            var link = itemElement.Element("link")?.Value?.Trim();
+
+            if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(link))
+            {
+                continue;
+            }
+
+            items.Add(new HuduCommunityPostMatch(title, link));
+        }
+
+        return items;
+    }
+
+    private static HuduCommunityPostMatch? FindMatchingCommunityPost(string? releaseVersion, IReadOnlyList<HuduCommunityPostMatch> items)
+    {
+        var normalizedVersion = NormalizeVersionToken(releaseVersion);
+        if (string.IsNullOrWhiteSpace(normalizedVersion))
+        {
+            return null;
+        }
+
+        foreach (var item in items)
+        {
+            var normalizedTitle = NormalizeTitleForMatching(item.Title);
+            if (normalizedTitle.Length == 0)
+            {
+                continue;
+            }
+
+            if (!IsCoreHuduReleaseTitle(normalizedTitle, normalizedVersion))
+            {
+                continue;
+            }
+
+            return item;
+        }
+
+        return null;
+    }
+
+    private static string NormalizeVersionToken(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return string.Empty;
+        }
+
+        var match = Regex.Match(version, @"\d+(?:\.\d+)+");
+        return match.Success ? match.Value : string.Empty;
+    }
+
+    private static string NormalizeTitleForMatching(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return string.Empty;
+        }
+
+        var normalized = WebUtility.HtmlDecode(title).Trim().ToLowerInvariant();
+        normalized = Regex.Replace(normalized, @"[^a-z0-9\.]+", " ");
+        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+
+        return normalized;
+    }
+
+    private static bool IsCoreHuduReleaseTitle(string normalizedTitle, string normalizedVersion)
+    {
+        return string.Equals(normalizedTitle, $"hudu version {normalizedVersion}", StringComparison.Ordinal) ||
+               string.Equals(normalizedTitle, $"hudu {normalizedVersion}", StringComparison.Ordinal);
+    }
+
     private static string BuildThreadName(string title, string prefix)
     {
         var normalizedTitle = Regex.Replace(title, @"\s+", " ").Trim();
@@ -520,8 +650,19 @@ public class HuduReleaseMonitorService : BackgroundService
 
         return new ReleaseNotesParseResult(parsed.IntroText, ordered);
     }
+
+    internal static string? FindCommunityPostLinkForTests(string? releaseVersion, IReadOnlyList<(string Title, string Link)> items)
+    {
+        var normalizedItems = items
+            .Select(item => new HuduCommunityPostMatch(item.Title, item.Link))
+            .ToList();
+
+        return FindMatchingCommunityPost(releaseVersion, normalizedItems)?.Link;
+    }
 }
 
 internal sealed record ReleaseNotesParseResult(string IntroText, IReadOnlyList<ReleaseSectionResult> Sections);
 
 internal sealed record ReleaseSectionResult(string Title, IReadOnlyList<string> Items);
+
+internal sealed record HuduCommunityPostMatch(string Title, string Link);

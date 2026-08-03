@@ -85,4 +85,31 @@ public sealed class HuduReleaseNotesParserTests
 
         Assert.Equal(["Bug Fixes", "Notes for Release"], parsed.Sections.Select(s => s.Title).ToArray());
     }
+
+    [Fact]
+    public void FindCommunityPostLink_MatchesCommunityReleaseTitleByVersion()
+    {
+        var link = HuduReleaseMonitorService.FindCommunityPostLinkForTests(
+            "2.44.0",
+            [
+                ("Hi Hudu Community!", "https://community.hudu.com/intros"),
+                ("Hudu Version 2.44.0", "https://community.hudu.com/release-notes/hudu-version-2-44-0"),
+                ("Radar Version 2.0.5", "https://community.hudu.com/release-notes/radar-version-2-0-5")
+            ]);
+
+        Assert.Equal("https://community.hudu.com/release-notes/hudu-version-2-44-0", link);
+    }
+
+    [Fact]
+    public void FindCommunityPostLink_IgnoresDifferentProductTitles()
+    {
+        var link = HuduReleaseMonitorService.FindCommunityPostLinkForTests(
+            "2.44.0",
+            [
+                ("Hudu Assist 2.44.0", "https://community.hudu.com/release-notes/hudu-assist-2-44-0"),
+                ("Radar Version 2.44.0", "https://community.hudu.com/release-notes/radar-version-2-44-0")
+            ]);
+
+        Assert.Null(link);
+    }
 }
