@@ -365,12 +365,11 @@ public class HuduReleaseMonitorService : BackgroundService
 
     private static string? ResolveReleaseDisplayUrl(string? releaseUrl, string? communityPostUrl)
     {
-        if (string.IsNullOrWhiteSpace(communityPostUrl))
-        {
-            return null;
-        }
+        var displayUrl = string.IsNullOrWhiteSpace(communityPostUrl)
+            ? releaseUrl
+            : communityPostUrl;
 
-        return communityPostUrl.Trim();
+        return string.IsNullOrWhiteSpace(displayUrl) ? null : displayUrl.Trim();
     }
 
     private static ParsedReleaseNotes ParseReleaseNotes(HuduReleaseItem release)
@@ -571,10 +570,12 @@ public class HuduReleaseMonitorService : BackgroundService
     {
         var items = new List<HuduCommunityPostMatch>();
 
-        foreach (var itemElement in doc.Descendants("item"))
+        foreach (var itemElement in doc.Descendants().Where(element =>
+                     string.Equals(element.Name.LocalName, "item", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(element.Name.LocalName, "entry", StringComparison.OrdinalIgnoreCase)))
         {
             var title = ExtractElementValue(itemElement, "title");
-            var link = ExtractElementValue(itemElement, "link");
+            var link = ExtractLinkValue(itemElement);
 
             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(link))
             {
@@ -614,7 +615,7 @@ public class HuduReleaseMonitorService : BackgroundService
 
     private static string? ExtractElementValue(XElement parent, string elementName)
     {
-        var element = parent.Element(elementName);
+        var element = parent.Elements().FirstOrDefault(child => string.Equals(child.Name.LocalName, elementName, StringComparison.OrdinalIgnoreCase));
         if (element is null)
         {
             return null;
@@ -626,6 +627,29 @@ public class HuduReleaseMonitorService : BackgroundService
         }
 
         return element.Nodes().OfType<XCData>().Select(node => node.Value).FirstOrDefault();
+    }
+
+    private static string? ExtractLinkValue(XElement parent)
+    {
+        var linkElement = parent.Elements().FirstOrDefault(element => string.Equals(element.Name.LocalName, "link", StringComparison.OrdinalIgnoreCase));
+        if (linkElement is null)
+        {
+            return null;
+        }
+
+        var href = linkElement.Attribute("href")?.Value;
+        if (!string.IsNullOrWhiteSpace(href))
+        {
+            return href.Trim();
+        }
+
+        var url = linkElement.Value;
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            return url.Trim();
+        }
+
+        return null;
     }
 
     private static HuduCommunityPostMatch? FindMatchingCommunityPost(string? releaseVersion, IReadOnlyList<HuduCommunityPostMatch> items)
@@ -782,6 +806,12 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static string? ResolveReleaseDisplayUrlForTests(string? releaseUrl, string? communityPostUrl)
     {
         return ResolveReleaseDisplayUrl(releaseUrl, communityPostUrl);
+    }
+
+    internal static List<HuduCommunityPostMatch> ParseCommunityItemsForTests(string xml)
+    {
+        var doc = XDocument.Parse(xml);
+        return ParseCommunityItems(doc);
     }
 }
 
