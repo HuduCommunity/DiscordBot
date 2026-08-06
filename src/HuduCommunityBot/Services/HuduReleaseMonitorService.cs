@@ -176,6 +176,16 @@ public class HuduReleaseMonitorService : BackgroundService
             state.LastCheckedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
         }
+
+        var releaseChannel = await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId);
+        if (releaseChannel is ITextChannel textChannel)
+        {
+            foreach (var release in relevantReleases.Where(r => r.Id <= lastPostedReleaseId).OrderByDescending(r => r.Id))
+            {
+                var communityPost = await TryFindCommunityReleasePostAsync(release);
+                await TryUpdateExistingReleasePostAsync(textChannel, release, communityPost);
+            }
+        }
     }
 
     private async Task PostReleaseAsync(HuduReleaseItem release)
@@ -190,22 +200,13 @@ public class HuduReleaseMonitorService : BackgroundService
         }
 
         var releaseUrl = string.IsNullOrWhiteSpace(release.Url)
-            ? $"https://hq.hudu.com/releases/{release.Id}.json"
+            ? null
             : release.Url.Trim();
         var communityPost = await TryFindCommunityReleasePostAsync(release);
+        var displayUrl = ResolveReleaseDisplayUrl(releaseUrl, communityPost?.Link);
 
         var parsedNotes = ParseReleaseNotes(release);
-        var description = BuildDescription(release, parsedNotes.IntroText, communityPost?.Link);
-
-        var embed = new EmbedBuilder()
-            .WithTitle($"Hudu Release {release.Name}")
-            .WithColor(Color.Blue)
-            .WithUrl(releaseUrl)
-            .WithDescription(description)
-            .WithFooter("Hudu Releases")
-            .WithTimestamp(ResolveTimestamp(release));
-
-        AddSectionFields(embed, release, parsedNotes.Sections);
+        var embed = BuildReleaseEmbed(release, releaseUrl, displayUrl, parsedNotes, communityPost?.Link);
 
         string? mentionText = null;
         if (_config.HuduReleaseMonitor.RoleId != 0)
@@ -213,7 +214,7 @@ public class HuduReleaseMonitorService : BackgroundService
             mentionText = $"<@&{_config.HuduReleaseMonitor.RoleId}>";
         }
 
-        var postedMessage = await messageChannel.SendMessageAsync(text: mentionText, embed: embed.Build());
+        var postedMessage = await messageChannel.SendMessageAsync(text: mentionText, embed: embed);
 
         if (discordChannel is ITextChannel textChannel)
         {
@@ -221,10 +222,45 @@ public class HuduReleaseMonitorService : BackgroundService
                 textChannel,
                 postedMessage,
                 BuildThreadName(release.Name, "Release"),
-                BuildThreadOpenerText(release, releaseUrl, communityPost));
+                BuildThreadOpenerText(release, communityPost));
         }
 
         _logger.LogInformation("Posted Hudu release update for release ID {ReleaseId} ({Version}).", release.Id, release.Name);
+    }
+
+    private async Task TryUpdateExistingReleasePostAsync(ITextChannel channel, HuduReleaseItem release, HuduCommunityPostMatch? communityPost)
+    {
+        if (communityPost is null)
+        {
+            return;
+        }
+
+        var recentMessages = await channel.GetMessagesAsync(100).FlattenAsync();
+        var matchingMessage = recentMessages
+            .Where(message => message.Author.Id == _client.CurrentUser.Id)
+            .Where(message => message.Embeds.Count > 0)
+            .Select(message => new { Message = message, Embed = message.Embeds.FirstOrDefault() })
+            .FirstOrDefault(entry =>
+                entry.Embed is not null &&
+                string.Equals(entry.Embed.Title, $"Hudu Release {release.Name}", StringComparison.Ordinal));
+
+        if (matchingMessage is null)
+        {
+            return;
+        }
+
+        var displayUrl = ResolveReleaseDisplayUrl(string.IsNullOrWhiteSpace(release.Url) ? null : release.Url.Trim(), communityPost.Link);
+        var parsedNotes = ParseReleaseNotes(release);
+        var updatedEmbed = BuildReleaseEmbed(release, string.IsNullOrWhiteSpace(release.Url) ? null : release.Url.Trim(), displayUrl, parsedNotes, communityPost.Link);
+
+        if (string.Equals(matchingMessage.Embed?.Url, displayUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            await TryPostCommunityThreadUpdateAsync(channel, release, communityPost);
+            return;
+        }
+
+        await ((IUserMessage)matchingMessage.Message).ModifyAsync(properties => properties.Embed = updatedEmbed);
+        await TryPostCommunityThreadUpdateAsync(channel, release, communityPost);
     }
 
     private async Task<HuduCommunityPostMatch?> TryFindCommunityReleasePostAsync(HuduReleaseItem release)
@@ -281,6 +317,26 @@ public class HuduReleaseMonitorService : BackgroundService
         }
     }
 
+    private static Embed BuildReleaseEmbed(HuduReleaseItem release, string? releaseUrl, string? displayUrl, ParsedReleaseNotes parsedNotes, string? communityPostUrl)
+    {
+        var description = BuildDescription(release, parsedNotes.IntroText, communityPostUrl);
+
+        var embedBuilder = new EmbedBuilder()
+            .WithTitle($"Hudu Release {release.Name}")
+            .WithColor(Color.Blue)
+            .WithDescription(description)
+            .WithFooter("Hudu Releases")
+            .WithTimestamp(ResolveTimestamp(release));
+
+        if (!string.IsNullOrWhiteSpace(displayUrl))
+        {
+            embedBuilder.WithUrl(displayUrl);
+        }
+
+        AddSectionFields(embedBuilder, release, parsedNotes.Sections);
+        return embedBuilder.Build();
+    }
+
     private static string BuildDescription(HuduReleaseItem release, string introText, string? communityPostUrl)
     {
         if (string.IsNullOrWhiteSpace(introText))
@@ -297,14 +353,24 @@ public class HuduReleaseMonitorService : BackgroundService
         return $"**Version:** `{release.Name}`\n**Release ID:** `{release.Id}`{communityLine}\n\n{introText}";
     }
 
-    private static string BuildThreadOpenerText(HuduReleaseItem release, string releaseUrl, HuduCommunityPostMatch? communityPost)
+    private static string BuildThreadOpenerText(HuduReleaseItem release, HuduCommunityPostMatch? communityPost)
     {
         if (communityPost is null)
         {
-            return $"Discussion thread for Hudu release {release.Name}:\n{releaseUrl}";
+            return $"Discussion thread for Hudu release {release.Name}.";
         }
 
-        return $"Discussion thread for Hudu release {release.Name}:\nRelease notes: {releaseUrl}\nCommunity post: {communityPost.Link}";
+        return $"Community discussion thread for Release {release.Name}: {communityPost.Link}";
+    }
+
+    private static string? ResolveReleaseDisplayUrl(string? releaseUrl, string? communityPostUrl)
+    {
+        if (string.IsNullOrWhiteSpace(communityPostUrl))
+        {
+            return null;
+        }
+
+        return communityPostUrl.Trim();
     }
 
     private static ParsedReleaseNotes ParseReleaseNotes(HuduReleaseItem release)
@@ -507,18 +573,59 @@ public class HuduReleaseMonitorService : BackgroundService
 
         foreach (var itemElement in doc.Descendants("item"))
         {
-            var title = itemElement.Element("title")?.Value?.Trim();
-            var link = itemElement.Element("link")?.Value?.Trim();
+            var title = ExtractElementValue(itemElement, "title");
+            var link = ExtractElementValue(itemElement, "link");
 
             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(link))
             {
                 continue;
             }
 
-            items.Add(new HuduCommunityPostMatch(title, link));
+            items.Add(new HuduCommunityPostMatch(title.Trim(), link.Trim()));
         }
 
         return items;
+    }
+
+    private async Task TryPostCommunityThreadUpdateAsync(ITextChannel channel, HuduReleaseItem release, HuduCommunityPostMatch communityPost)
+    {
+        var threadName = BuildThreadName(release.Name, "Release");
+        var thread = (await channel.GetActiveThreadsAsync()).FirstOrDefault(existingThread =>
+            string.Equals(existingThread.Name, threadName, StringComparison.Ordinal));
+
+        if (thread is null)
+        {
+            return;
+        }
+
+        var mentionText = _config.HuduReleaseMonitor.RoleId != 0
+            ? $"<@&{_config.HuduReleaseMonitor.RoleId}>"
+            : null;
+
+        var threadMessage = $"{mentionText} Community discussion thread for Release {release.Name}: {communityPost.Link}".Trim();
+        var recentMessages = await thread.GetMessagesAsync(20).FlattenAsync();
+        if (recentMessages.Any(message => string.Equals(message.Content, threadMessage, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        await thread.SendMessageAsync(threadMessage);
+    }
+
+    private static string? ExtractElementValue(XElement parent, string elementName)
+    {
+        var element = parent.Element(elementName);
+        if (element is null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(element.Value))
+        {
+            return element.Value;
+        }
+
+        return element.Nodes().OfType<XCData>().Select(node => node.Value).FirstOrDefault();
     }
 
     private static HuduCommunityPostMatch? FindMatchingCommunityPost(string? releaseVersion, IReadOnlyList<HuduCommunityPostMatch> items)
@@ -575,8 +682,20 @@ public class HuduReleaseMonitorService : BackgroundService
 
     private static bool IsCoreHuduReleaseTitle(string normalizedTitle, string normalizedVersion)
     {
-        return string.Equals(normalizedTitle, $"hudu version {normalizedVersion}", StringComparison.Ordinal) ||
-               string.Equals(normalizedTitle, $"hudu {normalizedVersion}", StringComparison.Ordinal);
+        if (string.IsNullOrWhiteSpace(normalizedTitle) || string.IsNullOrWhiteSpace(normalizedVersion))
+        {
+            return false;
+        }
+
+        var corePatterns = new[]
+        {
+            $"hudu version {normalizedVersion}",
+            $"hudu {normalizedVersion}",
+            $"hudu version {normalizedVersion} release notes",
+            $"hudu {normalizedVersion} release notes"
+        };
+
+        return corePatterns.Any(pattern => string.Equals(normalizedTitle, pattern, StringComparison.Ordinal));
     }
 
     private static string BuildThreadName(string title, string prefix)
@@ -658,6 +777,11 @@ public class HuduReleaseMonitorService : BackgroundService
             .ToList();
 
         return FindMatchingCommunityPost(releaseVersion, normalizedItems)?.Link;
+    }
+
+    internal static string? ResolveReleaseDisplayUrlForTests(string? releaseUrl, string? communityPostUrl)
+    {
+        return ResolveReleaseDisplayUrl(releaseUrl, communityPostUrl);
     }
 }
 

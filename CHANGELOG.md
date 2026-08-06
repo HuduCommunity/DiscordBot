@@ -5,181 +5,195 @@ All notable changes to HuduCommunityBot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.5] - 2026-08-03
+## \[1.5.7] - 2026-08-06
+
+### Changed
+
+* Prefer community post links for release embeds
+* Retroactively update recent release posts with the matching community discussion link once it appears
+* Post a role-tagged thread update when a matching community discussion thread is found for a release
+
+## \[1.5.6] - 2026-08-03
+
+### Changed
+
+* Prefer community post links for release embeds
+
+## \[1.5.5] - 2026-08-03
 
 ### Changed
 
 * improve all-caps moderation with acronym allowlist
 
-## [1.5.4] - 2026-07-20
+## \[1.5.4] - 2026-07-20
 
 ### Changed
 
 * link Hudu release notes to matching community discussion thread
 
-## [1.5.3] - 2026-07-14
+## \[1.5.3] - 2026-07-14
 
 ### Changed
 
 * support user ID and mention parsing for ban and unban commands
 
-## [1.5.2] - 2026-07-04
+## \[1.5.2] - 2026-07-04
 
 ### Changed
 
 * Fix /warnings clear component custom-ID mismatch causing silent interaction failure
 
-## [1.5.1] - 2026-07-04
+## \[1.5.1] - 2026-07-04
 
 ### Changed
 
 * Fix silent component-command failures and gateway-blocking MessageReceived handlers
 
-## [1.5.0] - 2026-07-04
+## \[1.5.0] - 2026-07-04
 
 ### Added
 
 * Add warning removal: /warnings clear with interactive picker for individual or bulk removal
 
-## [1.4.1] - 2026-07-04
+## \[1.4.1] - 2026-07-04
 
 ### Changed
 
 * Fix mod-log thread lookup limit and /warnings ordering
 
-## [1.4.0] - 2026-07-04
+## \[1.4.0] - 2026-07-04
 
 ### Added
 
 * Add per-user mod-log thread reuse, durable warning persistence, and all-caps auto-moderation
 
-## [1.3.2] - 2026-06-30
+## \[1.3.2] - 2026-06-30
 
 ### Fixed
 
 * Link member name to Discord profile in join audit embed
 
-## [1.3.1] - 2026-06-26
+## \[1.3.1] - 2026-06-26
 
 ### Fixed
 
 * Show username and profile image in member join and leave audit embeds
 
-## [1.3.0] - 2026-06-25
+## \[1.3.0] - 2026-06-25
 
 ### Added
 
 * Add member join logging and per-user ignore list for event audit
 
-## [1.2.22] - 2026-06-25
+## \[1.2.22] - 2026-06-25
 
 ### Changed
 
 * Add move messages and thread relocation with reaction and pinned metadata copy
 
-## [1.2.21] - 2026-06-24
+## \[1.2.21] - 2026-06-24
 
 ### Changed
 
 * Restore clickable deleted-message author mention and author icon rendering
 
-## [1.2.20] - 2026-06-24
+## \[1.2.20] - 2026-06-24
 
 ### Changed
 
 * Guarantee deleted-message avatar thumbnail fallback
 
-## [1.2.19] - 2026-06-24
+## \[1.2.19] - 2026-06-24
 
 ### Changed
 
 * Stabilize deleted message attribution with early capture and author profile fallback
 
-## [1.2.18] - 2026-06-24
+## \[1.2.18] - 2026-06-24
 
 ### Changed
 
 * Add receive-time snapshot fallback for deleted message author attribution
 
-## [1.2.17] - 2026-06-24
+## \[1.2.17] - 2026-06-24
 
 ### Changed
 
 * Enable message cache for deleted-message author attribution
 
-## [1.2.16] - 2026-06-24
+## \[1.2.16] - 2026-06-24
 
 ### Changed
 
 * Improve deleted message author attribution from audit logs
 
-## [1.2.15] - 2026-06-24
+## \[1.2.15] - 2026-06-24
 
 ### Changed
 
 * Add moderation event audit logging and deploy secret wiring
 
-## [1.2.14] - 2026-06-20
+## \[1.2.14] - 2026-06-20
 
 ### Changed
 
 * show offending image in cross-channel spam log embed
 
-## [1.2.13] - 2026-06-18
+## \[1.2.13] - 2026-06-18
 
 ### Changed
 
 * Show username and user ID in /singlemessage list output
 
-## [1.2.12] - 2026-06-18
+## \[1.2.12] - 2026-06-18
 
 ### Changed
 
 * Add EF migration for persistent single-message backfill startup fix
 
-## [1.2.11] - 2026-06-18
+## \[1.2.11] - 2026-06-18
 
 ### Changed
 
 * Add persistent background single-message history backfill
 
-## [1.2.10] - 2026-06-18
+## \[1.2.10] - 2026-06-18
 
 ### Changed
 
 * Fix single-message enable interaction timeout by deferring response
 
-## [1.2.9] - 2026-06-15
+## \[1.2.9] - 2026-06-15
 
 ### Changed
 
 * Add configurable cross-channel spam enforcement defaults (delete+timeout on)
 
-## [1.2.8] - 2026-06-15
+## \[1.2.8] - 2026-06-15
 
 ### Changed
 
 * Fix live test detection race via TCS; make content optional (attachment-only test now supported)
 
-## [1.2.7] - 2026-06-15
+## \[1.2.7] - 2026-06-15
 
 ### Changed
 
 * Fix cross-channel live test detection state and add attachment-aware spam test support
 
-## [1.2.6] - 2026-06-15
+## \[1.2.6] - 2026-06-15
 
 ### Changed
 
 * Improve cross-channel spam detection fingerprinting, logging, and add cleanup-enabled live testing
 
-## [1.2.5] - 2026-06-15
+## \[1.2.5] - 2026-06-15
 
 ### Changed
 
 * Add moderation exemptions, command access controls, and forum log resolution fallback
 
-## [1.2.4] - 2026-06-15
+## \[1.2.4] - 2026-06-15
 
 ### Changed
 
@@ -191,19 +205,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * `/spam test` command (requires Manage Messages) — dry-runs the cross-channel spam detector against any text, showing the computed fingerprint, current config, trigger conditions, and enforcement actions without taking any real action
 
-## [1.2.3] - 2026-06-15
+## \[1.2.3] - 2026-06-15
 
 ### Fixed
 
 * Hudu release feed HTTP timeouts are now logged at `Information` instead of `Warning` — these are transient retryable failures from a slow external endpoint and do not warrant warning-level noise
 
-## [1.2.2] - 2026-06-15
+## \[1.2.2] - 2026-06-15
 
 ### Fixed
 
 * `YoutubeFeedUrlsEndpointHostedService` is no longer registered when the YouTube monitor is disabled — previously it started unconditionally and would crash with `ObjectDisposedException` at startup
 
-## [1.2.1] - 2026-06-15
+## \[1.2.1] - 2026-06-15
 
 ### Fixed
 
@@ -211,7 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * YouTube forum post title falls back to `[{ChannelName}] {VideoId}` if template substitution produces an empty or whitespace-only result
 * Log the resolved post title (with length) at Info level before posting, to aid diagnosis of future `BASE_TYPE_BAD_LENGTH` rejections
 
-## [1.2.0] - 2026-06-14
+## \[1.2.0] - 2026-06-14
 
 ### Added
 
@@ -222,145 +236,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * YouTube `/set-default-template` parameter description truncated to satisfy Discord's 100-character option description limit
 
-## [1.1.0] - 2026-06-14
+## \[1.1.0] - 2026-06-14
 
 ### Changed
 
 * Add single-message-per-user channel enforcement with /singlemessage slash commands
 
-## [1.0.22] - 2026-05-27
+## \[1.0.22] - 2026-05-27
 
 ### Changed
 
 * Switch YouTube feed endpoint to WebApplication
 
-## [1.0.21] - 2026-05-27
+## \[1.0.21] - 2026-05-27
 
 ### Changed
 
 * Improve slash command registration diagnostics
 
-## [1.0.20] - 2026-05-27
+## \[1.0.20] - 2026-05-27
 
 ### Changed
 
 * Expose and emit endpoint-based YouTube observability metrics
 
-## [1.0.19] - 2026-05-27
+## \[1.0.19] - 2026-05-27
 
 ### Changed
 
 * Add YouTube feed URL endpoint for observability
 
-## [1.0.18] - 2026-05-27
+## \[1.0.18] - 2026-05-27
 
 ### Changed
 
 * Add Prometheus metrics endpoint
 
-## [1.0.17] - 2026-05-21
+## \[1.0.17] - 2026-05-21
 
 ### Changed
 
 * Remove /status command and StatusModule
 
-## [1.0.16] - 2026-05-21
+## \[1.0.16] - 2026-05-21
 
 ### Changed
 
 * Remove HaloStatusMonitorService (use /status command instead)
 
-## [1.0.15] - 2026-05-21
+## \[1.0.15] - 2026-05-21
 
 ### Changed
 
 * Add observed-feed logging for reconciliation dashboard
 
-## [1.0.14] - 2026-05-19
+## \[1.0.14] - 2026-05-19
 
 ### Changed
 
 * Add Discord timestamp placeholders for YouTube published date templates
 
-## [1.0.13] - 2026-05-19
+## \[1.0.13] - 2026-05-19
 
 ### Changed
 
 * Support escaped newline tokens in YouTube title and body templates
 
-## [1.0.12] - 2026-05-19
+## \[1.0.12] - 2026-05-19
 
 ### Changed
 
 * Add configurable YouTube post body template and placeholders
 
-## [1.0.11] - 2026-05-19
+## \[1.0.11] - 2026-05-19
 
 ### Changed
 
 * Add YouTube title template placeholders from feed metadata
 
-## [1.0.10] - 2026-05-19
+## \[1.0.10] - 2026-05-19
 
 ### Changed
 
 * Add Hudu community RSS monitor and thread creation for feed posts
 
-## [1.0.9] - 2026-05-19
+## \[1.0.9] - 2026-05-19
 
 ### Changed
 
 * Fix Hudu release monitor feed parsing and polling reliability
 
-## [1.0.8] - 2026-05-19
+## \[1.0.8] - 2026-05-19
 
 ### Changed
 
 * Version bump
 
-## [1.0.7] - 2026-05-19
+## \[1.0.7] - 2026-05-19
 
 ### Changed
 
 * Harmonize disconnect lifecycle logging with Halo and Panda bots
 
-## [1.0.6] - 2026-05-19
+## \[1.0.6] - 2026-05-19
 
 ### Changed
 
 * Reduce reconnect noise for slash command registration and transient disconnect logging
 
-## [1.0.5] - 2026-05-19
+## \[1.0.5] - 2026-05-19
 
 ### Changed
 
 * Conditionally register YouTube monitor service when enabled
 
-## [1.0.4] - 2026-05-19
+## \[1.0.4] - 2026-05-19
 
 ### Changed
 
 * Register slash commands only once; skip re-registration on gateway reconnects
 
-## [1.0.3] - 2026-05-19
+## \[1.0.3] - 2026-05-19
 
 ### Changed
 
 * Downgrade graceful Discord disconnect log from Warning to Information
 
-## [1.0.2] - 2026-05-19
+## \[1.0.2] - 2026-05-19
 
 ### Changed
 
 * Fix missing database tables by switching initialisation from EnsureCreated to MigrateAsync
 
-## [1.0.1] - 2026-05-19
+## \[1.0.1] - 2026-05-19
 
 ### Changed
 
 * Fix heartbeat monitor not starting when slash command registration fails on startup
 
-## [1.0.0] - 2026-05-18
+## \[1.0.0] - 2026-05-18
 
 ### Changed
 
