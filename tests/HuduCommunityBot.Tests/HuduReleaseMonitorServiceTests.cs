@@ -62,4 +62,15 @@ public sealed class HuduReleaseMonitorServiceTests
 
         Assert.Equal(67, lastPostedReleaseId);
     }
+
+    [Fact]
+    public void GetRetrospectiveUpdateReleases_ReturnsKnownRecentReleasesWhenNoNewReleasesExist()
+    {
+        var releaseIds = HuduReleaseMonitorService.GetRetrospectiveUpdateReleaseIdsForTests(
+            [1, 3, 4, 5],
+            baselineReleaseId: 3,
+            lastPostedReleaseId: 5);
+
+        Assert.Equal([3, 4, 5], releaseIds);
+    }
 }

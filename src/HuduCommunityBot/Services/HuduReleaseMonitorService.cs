@@ -158,13 +158,6 @@ public class HuduReleaseMonitorService : BackgroundService
             .OrderBy(r => r.Id)
             .ToList();
 
-        if (newReleases.Count == 0)
-        {
-            state.LastCheckedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
         foreach (var release in newReleases)
         {
             _logger.LogInformation(
@@ -180,10 +173,23 @@ public class HuduReleaseMonitorService : BackgroundService
             await db.SaveChangesAsync(cancellationToken);
         }
 
+        var processedReleaseIds = new HashSet<int>(newReleases.Select(r => r.Id));
+        var retrospectiveUpperBoundReleaseId = relevantReleases.Max(r => r.Id);
+        var retrospectiveUpdates = GetRetrospectiveUpdateReleases(relevantReleases, _config.HuduReleaseMonitor.BaselineReleaseId, retrospectiveUpperBoundReleaseId)
+            .Where(release => !processedReleaseIds.Contains(release.Id))
+            .ToList();
+
+        if (retrospectiveUpdates.Count == 0)
+        {
+            state.LastCheckedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
         var releaseChannel = await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId);
         if (releaseChannel is ITextChannel textChannel)
         {
-            foreach (var release in relevantReleases.Where(r => r.Id <= lastPostedReleaseId).OrderByDescending(r => r.Id))
+            foreach (var release in retrospectiveUpdates.OrderBy(r => r.Id))
             {
                 var communityPost = await TryFindCommunityReleasePostAsync(release);
                 await TryUpdateExistingReleasePostAsync(textChannel, release, communityPost);
@@ -199,6 +205,35 @@ public class HuduReleaseMonitorService : BackgroundService
         }
 
         return baselineReleaseId;
+    }
+
+    private static List<HuduReleaseItem> GetRetrospectiveUpdateReleases(IReadOnlyList<HuduReleaseItem> releases, int baselineReleaseId, int lastPostedReleaseId)
+    {
+        if (releases.Count == 0)
+        {
+            return [];
+        }
+
+        var releaseIds = releases
+            .Select(r => r.Id)
+            .Where(id => id > 0)
+            .OrderBy(id => id)
+            .ToList();
+
+        if (releaseIds.Count == 0)
+        {
+            return [];
+        }
+
+        var relevantIds = releaseIds
+            .Where(id => id >= baselineReleaseId && id <= lastPostedReleaseId)
+            .TakeLast(3)
+            .ToList();
+
+        return releases
+            .Where(r => relevantIds.Contains(r.Id))
+            .OrderBy(r => r.Id)
+            .ToList();
     }
 
     private async Task PostReleaseAsync(HuduReleaseItem release)
@@ -824,6 +859,14 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static int ResolveLastPostedReleaseIdForTests(string? lastPostedItemId, int baselineReleaseId)
     {
         return ResolveLastPostedReleaseId(lastPostedItemId, baselineReleaseId);
+    }
+
+    internal static List<int> GetRetrospectiveUpdateReleaseIdsForTests(IReadOnlyList<int> releaseIds, int baselineReleaseId, int lastPostedReleaseId)
+    {
+        var releases = releaseIds.Select(id => new HuduReleaseItem { Id = id }).ToList();
+        return GetRetrospectiveUpdateReleases(releases, baselineReleaseId, lastPostedReleaseId)
+            .Select(release => release.Id)
+            .ToList();
     }
 
     internal static List<HuduCommunityPostMatch> ParseCommunityItemsForTests(string xml)
