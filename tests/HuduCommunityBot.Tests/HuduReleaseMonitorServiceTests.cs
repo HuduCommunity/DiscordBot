@@ -1,3 +1,4 @@
+using DiscordBot.Models;
 using DiscordBot.Services;
 using Xunit;
 
@@ -53,6 +54,36 @@ public sealed class HuduReleaseMonitorServiceTests
         Assert.Single(items);
         Assert.Equal("https://www.reddit.com/r/hudu/comments/abc123/hudu_version_2441/", items[0].Link);
         Assert.Equal("Hudu Version 2.44.1 - Release Notes", items[0].Title);
+    }
+
+    [Fact]
+    public void ResolveDiscussionFeedUrl_PrefersReleaseMonitorDiscussionFeedUrl()
+    {
+        var config = new BotConfig
+        {
+            HuduReleaseMonitor = new HuduReleaseMonitorConfig
+            {
+                DiscussionFeedUrl = "https://www.reddit.com/r/hudu/.rss"
+            },
+            HuduCommunityFeedMonitor = new HuduCommunityFeedMonitorConfig
+            {
+                FeedUrl = "https://community.hudu.com/rss/feed"
+            }
+        };
+
+        var feedUrl = HuduReleaseMonitorService.ResolveDiscussionFeedUrlForTests(config);
+
+        Assert.Equal("https://www.reddit.com/r/hudu/.rss", feedUrl);
+    }
+
+    [Fact]
+    public void ShouldRetroactivelyUpdateExistingReleasePost_RecognizesCommunityLinkAsWrong()
+    {
+        var shouldUpdate = HuduReleaseMonitorService.ShouldRetroactivelyUpdateExistingReleasePostForTests(
+            "https://community.hudu.com/release-notes/hudu-version-2-44-0",
+            "https://www.reddit.com/r/hudu/comments/abc123/hudu_version_2440/");
+
+        Assert.True(shouldUpdate);
     }
 
     [Fact]

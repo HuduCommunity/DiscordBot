@@ -402,6 +402,7 @@ HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__Enabled=true
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__ChannelId=1234567890
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__RoleId=1234567890
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl=https://hq.hudu.com/public/releases.json
+HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__DiscussionFeedUrl=https://www.reddit.com/r/hudu/.rss
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes=15
 HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId=67
 HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled=true
@@ -492,6 +493,7 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `HUDU_RELEASE_MONITOR_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__ChannelId` |
 | `HUDU_RELEASE_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__RoleId` |
 | `HUDU_RELEASE_MONITOR_FEED_URL` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl` |
+| `HUDU_RELEASE_MONITOR_DISCUSSION_FEED_URL` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__DiscussionFeedUrl` |
 | `HUDU_RELEASE_MONITOR_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes` |
 | `HUDU_RELEASE_MONITOR_BASELINE_RELEASE_ID` | `HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId` |
 | `HUDU_COMMUNITY_FEED_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled` |

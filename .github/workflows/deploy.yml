@@ -136,6 +136,7 @@ jobs:
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__ChannelId=${{ secrets.HUDU_RELEASE_MONITOR_CHANNEL_ID || '0' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__RoleId=${{ secrets.HUDU_RELEASE_MONITOR_ROLE_ID || '0' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__FeedUrl=${{ secrets.HUDU_RELEASE_MONITOR_FEED_URL || 'https://hq.hudu.com/public/releases.json' }}' \
+        'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__DiscussionFeedUrl=${{ secrets.HUDU_RELEASE_MONITOR_DISCUSSION_FEED_URL || 'https://www.reddit.com/r/hudu/.rss' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__PollIntervalMinutes=${{ secrets.HUDU_RELEASE_MONITOR_POLL_INTERVAL_MINUTES || '15' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduReleaseMonitor__BaselineReleaseId=${{ secrets.HUDU_RELEASE_MONITOR_BASELINE_RELEASE_ID || '67' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__Enabled=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_ENABLED || 'false' }}' \

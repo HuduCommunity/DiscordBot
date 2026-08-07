@@ -8,7 +8,7 @@ public class HuduCommunityFeedMonitorConfig
 
     public ulong RoleId { get; set; }
 
-    public string FeedUrl { get; set; } = "https://www.reddit.com/r/hudu/.rss";
+    public string FeedUrl { get; set; } = "https://community.hudu.com/rss/feed";
 
     public int PollIntervalMinutes { get; set; } = 15;
 

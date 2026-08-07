@@ -301,7 +301,7 @@ public class HuduReleaseMonitorService : BackgroundService
         var parsedNotes = ParseReleaseNotes(release);
         var updatedEmbed = BuildReleaseEmbed(release, string.IsNullOrWhiteSpace(release.Url) ? null : release.Url.Trim(), displayUrl, parsedNotes, communityPost.Link);
 
-        if (string.Equals(matchingMessage.Embed?.Url, displayUrl, StringComparison.OrdinalIgnoreCase))
+        if (!ShouldRetroactivelyUpdateExistingReleasePost(matchingMessage.Embed?.Url, displayUrl))
         {
             await TryPostCommunityThreadUpdateAsync(channel, release, communityPost);
             return;
@@ -311,9 +311,38 @@ public class HuduReleaseMonitorService : BackgroundService
         await TryPostCommunityThreadUpdateAsync(channel, release, communityPost);
     }
 
+    private static bool ShouldRetroactivelyUpdateExistingReleasePost(string? currentUrl, string? desiredUrl)
+    {
+        if (string.IsNullOrWhiteSpace(desiredUrl))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentUrl))
+        {
+            return true;
+        }
+
+        if (string.Equals(currentUrl, desiredUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var currentLower = currentUrl.Trim().ToLowerInvariant();
+        var desiredLower = desiredUrl.Trim().ToLowerInvariant();
+
+        if (desiredLower.Contains("reddit.com", StringComparison.OrdinalIgnoreCase) &&
+            currentLower.Contains("community.hudu.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return true;
+    }
+
     private async Task<HuduCommunityPostMatch?> TryFindCommunityReleasePostAsync(HuduReleaseItem release)
     {
-        var feedUrl = _config.HuduCommunityFeedMonitor.FeedUrl?.Trim();
+        var feedUrl = ResolveDiscussionFeedUrl(_config);
         if (string.IsNullOrWhiteSpace(feedUrl) || !Uri.TryCreate(feedUrl, UriKind.Absolute, out _))
         {
             return null;
@@ -345,6 +374,11 @@ public class HuduReleaseMonitorService : BackgroundService
             _logger.LogWarning(ex, "Failed to resolve Hudu Community release post for version {Version}.", release.Name);
             return null;
         }
+    }
+
+    private static string? ResolveDiscussionFeedUrl(BotConfig config)
+    {
+        return config.HuduReleaseMonitor.DiscussionFeedUrl?.Trim();
     }
 
     private async Task TryCreateThreadAsync(ITextChannel channel, IMessage sourceMessage, string threadName, string openerText)
@@ -854,6 +888,16 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static string? ResolveReleaseDisplayUrlForTests(string? releaseUrl, string? communityPostUrl)
     {
         return ResolveReleaseDisplayUrl(releaseUrl, communityPostUrl);
+    }
+
+    internal static string? ResolveDiscussionFeedUrlForTests(BotConfig config)
+    {
+        return ResolveDiscussionFeedUrl(config);
+    }
+
+    internal static bool ShouldRetroactivelyUpdateExistingReleasePostForTests(string? currentUrl, string? desiredUrl)
+    {
+        return ShouldRetroactivelyUpdateExistingReleasePost(currentUrl, desiredUrl);
     }
 
     internal static int ResolveLastPostedReleaseIdForTests(string? lastPostedItemId, int baselineReleaseId)
