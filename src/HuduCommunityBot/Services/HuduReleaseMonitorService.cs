@@ -158,6 +158,8 @@ public class HuduReleaseMonitorService : BackgroundService
             .OrderBy(r => r.Id)
             .ToList();
 
+        var discussionFeedMatches = await LoadDiscussionFeedMatchesAsync();
+
         foreach (var release in newReleases)
         {
             _logger.LogInformation(
@@ -166,7 +168,8 @@ public class HuduReleaseMonitorService : BackgroundService
                 release.Name,
                 ResolveTimestamp(release).UtcDateTime);
 
-            await PostReleaseAsync(release);
+            var communityPost = await TryFindCommunityReleasePostAsync(release, discussionFeedMatches);
+            await PostReleaseAsync(release, communityPost);
 
             state.LastPostedItemId = release.Id.ToString();
             state.LastCheckedAt = DateTime.UtcNow;
@@ -191,7 +194,7 @@ public class HuduReleaseMonitorService : BackgroundService
         {
             foreach (var release in retrospectiveUpdates.OrderBy(r => r.Id))
             {
-                var communityPost = await TryFindCommunityReleasePostAsync(release);
+                var communityPost = await TryFindCommunityReleasePostAsync(release, discussionFeedMatches);
                 await TryUpdateExistingReleasePostAsync(textChannel, release, communityPost);
             }
         }
@@ -236,7 +239,7 @@ public class HuduReleaseMonitorService : BackgroundService
             .ToList();
     }
 
-    private async Task PostReleaseAsync(HuduReleaseItem release)
+    private async Task PostReleaseAsync(HuduReleaseItem release, HuduCommunityPostMatch? communityPost)
     {
         var discordChannel = await _client.GetChannelAsync(_config.HuduReleaseMonitor.ChannelId);
         if (discordChannel is not IMessageChannel messageChannel)
@@ -250,7 +253,6 @@ public class HuduReleaseMonitorService : BackgroundService
         var releaseUrl = string.IsNullOrWhiteSpace(release.Url)
             ? null
             : release.Url.Trim();
-        var communityPost = await TryFindCommunityReleasePostAsync(release);
         var displayUrl = ResolveReleaseDisplayUrl(releaseUrl, communityPost?.Link);
 
         var parsedNotes = ParseReleaseNotes(release);
@@ -340,8 +342,27 @@ public class HuduReleaseMonitorService : BackgroundService
         return true;
     }
 
-    private async Task<HuduCommunityPostMatch?> TryFindCommunityReleasePostAsync(HuduReleaseItem release)
+    private async Task<HuduCommunityPostMatch?> TryFindCommunityReleasePostAsync(HuduReleaseItem release, IReadOnlyList<HuduCommunityPostMatch>? discussionFeedMatches)
     {
+        if (discussionFeedMatches is not null)
+        {
+            var matchedItem = FindMatchingCommunityPost(release.Name, discussionFeedMatches);
+            if (matchedItem is null)
+            {
+                _logger.LogInformation(
+                    "No matching Hudu Community release post found for version {Version}.",
+                    release.Name);
+                return null;
+            }
+
+            _logger.LogInformation(
+                "Matched Hudu Community release post for version {Version}: {CommunityPostUrl}",
+                release.Name,
+                matchedItem.Link);
+
+            return matchedItem;
+        }
+
         var feedUrl = ResolveDiscussionFeedUrl(_config);
         if (string.IsNullOrWhiteSpace(feedUrl) || !Uri.TryCreate(feedUrl, UriKind.Absolute, out _))
         {
@@ -373,6 +394,27 @@ public class HuduReleaseMonitorService : BackgroundService
         {
             _logger.LogWarning(ex, "Failed to resolve Hudu Community release post for version {Version}.", release.Name);
             return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<HuduCommunityPostMatch>> LoadDiscussionFeedMatchesAsync()
+    {
+        var feedUrl = ResolveDiscussionFeedUrl(_config);
+        if (string.IsNullOrWhiteSpace(feedUrl) || !Uri.TryCreate(feedUrl, UriKind.Absolute, out _))
+        {
+            return [];
+        }
+
+        try
+        {
+            var xml = await _httpClient.GetStringAsync(feedUrl);
+            var doc = XDocument.Parse(xml);
+            return ParseCommunityItems(doc);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load discussion feed matches for Hudu release posts.");
+            return [];
         }
     }
 
@@ -888,6 +930,11 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static string? ResolveReleaseDisplayUrlForTests(string? releaseUrl, string? communityPostUrl)
     {
         return ResolveReleaseDisplayUrl(releaseUrl, communityPostUrl);
+    }
+
+    internal static HuduCommunityPostMatch? FindMatchingDiscussionPostForTests(string? releaseVersion, IReadOnlyList<HuduCommunityPostMatch> items)
+    {
+        return FindMatchingCommunityPost(releaseVersion, items);
     }
 
     internal static string? ResolveDiscussionFeedUrlForTests(BotConfig config)

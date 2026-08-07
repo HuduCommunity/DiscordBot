@@ -57,6 +57,21 @@ public sealed class HuduReleaseMonitorServiceTests
     }
 
     [Fact]
+    public void FindMatchingDiscussionPost_UsesCachedFeedItems()
+    {
+        var match = HuduReleaseMonitorService.FindMatchingDiscussionPostForTests(
+            "2.44.1",
+            [
+                new HuduCommunityPostMatch(
+                    "Hudu Version 2.44.1 - Release Notes",
+                    "https://www.reddit.com/r/hudu/comments/abc123/hudu_version_2441/")
+            ]);
+
+        Assert.NotNull(match);
+        Assert.Equal("https://www.reddit.com/r/hudu/comments/abc123/hudu_version_2441/", match!.Link);
+    }
+
+    [Fact]
     public void ResolveDiscussionFeedUrl_PrefersReleaseMonitorDiscussionFeedUrl()
     {
         var config = new BotConfig
