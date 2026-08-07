@@ -1,5 +1,6 @@
 name: .NET CI
 
+# Trigger a fresh CI run after transient GitHub workflow delivery issues.
 on:
   push:
     branches: [ "main" ]
