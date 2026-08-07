@@ -54,4 +54,12 @@ public sealed class HuduReleaseMonitorServiceTests
         Assert.Equal("https://www.reddit.com/r/hudu/comments/abc123/hudu_version_2441/", items[0].Link);
         Assert.Equal("Hudu Version 2.44.1 - Release Notes", items[0].Title);
     }
+
+    [Fact]
+    public void ResolveLastPostedReleaseId_UsesBaselineWhenStateIsMissing()
+    {
+        var lastPostedReleaseId = HuduReleaseMonitorService.ResolveLastPostedReleaseIdForTests(null, 67);
+
+        Assert.Equal(67, lastPostedReleaseId);
+    }
 }

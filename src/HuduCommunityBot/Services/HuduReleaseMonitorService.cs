@@ -117,13 +117,16 @@ public class HuduReleaseMonitorService : BackgroundService
         var state = await db.FeedPostStates
             .FirstOrDefaultAsync(x => x.FeedType == FeedType && x.SourceId == sourceId, cancellationToken);
 
+        var baselineReleaseId = _config.HuduReleaseMonitor.BaselineReleaseId;
+        var lastPostedReleaseId = ResolveLastPostedReleaseId(state?.LastPostedItemId, baselineReleaseId);
+
         if (state == null)
         {
             state = new FeedPostState
             {
                 FeedType = FeedType,
                 SourceId = sourceId,
-                LastPostedItemId = _config.HuduReleaseMonitor.BaselineReleaseId.ToString(),
+                LastPostedItemId = lastPostedReleaseId.ToString(),
                 LastCheckedAt = DateTime.UtcNow
             };
 
@@ -132,14 +135,11 @@ public class HuduReleaseMonitorService : BackgroundService
 
             _logger.LogInformation(
                 "Hudu release monitor initialized with baseline release ID {BaselineReleaseId}.",
-                _config.HuduReleaseMonitor.BaselineReleaseId);
-
-            return;
+                lastPostedReleaseId);
         }
-
-        if (!int.TryParse(state.LastPostedItemId, out var lastPostedReleaseId) || lastPostedReleaseId <= 0)
+        else if (!int.TryParse(state.LastPostedItemId, out var parsedLastPostedReleaseId) || parsedLastPostedReleaseId <= 0)
         {
-            lastPostedReleaseId = _config.HuduReleaseMonitor.BaselineReleaseId;
+            lastPostedReleaseId = baselineReleaseId;
             state.LastPostedItemId = lastPostedReleaseId.ToString();
             state.LastCheckedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
@@ -147,7 +147,10 @@ public class HuduReleaseMonitorService : BackgroundService
             _logger.LogInformation(
                 "Hudu release monitor repaired invalid state and set baseline release ID to {BaselineReleaseId}.",
                 lastPostedReleaseId);
-            return;
+        }
+        else
+        {
+            lastPostedReleaseId = parsedLastPostedReleaseId;
         }
 
         var newReleases = relevantReleases
@@ -186,6 +189,16 @@ public class HuduReleaseMonitorService : BackgroundService
                 await TryUpdateExistingReleasePostAsync(textChannel, release, communityPost);
             }
         }
+    }
+
+    private static int ResolveLastPostedReleaseId(string? lastPostedItemId, int baselineReleaseId)
+    {
+        if (int.TryParse(lastPostedItemId, out var lastPostedReleaseId) && lastPostedReleaseId > 0)
+        {
+            return lastPostedReleaseId;
+        }
+
+        return baselineReleaseId;
     }
 
     private async Task PostReleaseAsync(HuduReleaseItem release)
@@ -806,6 +819,11 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static string? ResolveReleaseDisplayUrlForTests(string? releaseUrl, string? communityPostUrl)
     {
         return ResolveReleaseDisplayUrl(releaseUrl, communityPostUrl);
+    }
+
+    internal static int ResolveLastPostedReleaseIdForTests(string? lastPostedItemId, int baselineReleaseId)
+    {
+        return ResolveLastPostedReleaseId(lastPostedItemId, baselineReleaseId);
     }
 
     internal static List<HuduCommunityPostMatch> ParseCommunityItemsForTests(string xml)
