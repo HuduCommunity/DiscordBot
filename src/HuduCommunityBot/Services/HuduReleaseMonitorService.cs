@@ -835,12 +835,21 @@ public class HuduReleaseMonitorService : BackgroundService
             return false;
         }
 
+        var versionToken = normalizedVersion.Replace(".", "");
         var corePatterns = new[]
         {
             $"hudu version {normalizedVersion}",
             $"hudu {normalizedVersion}",
             $"hudu version {normalizedVersion} release notes",
-            $"hudu {normalizedVersion} release notes"
+            $"hudu {normalizedVersion} release notes",
+            $"v{normalizedVersion} is live",
+            $"v{normalizedVersion} live",
+            $"v{versionToken} is live",
+            $"v{versionToken} live",
+            $"{normalizedVersion} is live",
+            $"{normalizedVersion} live",
+            $"{normalizedVersion} is live!",
+            $"{normalizedVersion} live!"
         };
 
         return corePatterns.Any(pattern => string.Equals(normalizedTitle, pattern, StringComparison.Ordinal));

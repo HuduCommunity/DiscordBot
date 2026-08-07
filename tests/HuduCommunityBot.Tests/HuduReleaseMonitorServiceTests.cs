@@ -72,6 +72,21 @@ public sealed class HuduReleaseMonitorServiceTests
     }
 
     [Fact]
+    public void FindMatchingDiscussionPost_MatchesRedditLiveAnnouncementTitles()
+    {
+        var match = HuduReleaseMonitorService.FindMatchingDiscussionPostForTests(
+            "2.44.2",
+            [
+                new HuduCommunityPostMatch(
+                    "V2.44.2 is Live!",
+                    "https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/")
+            ]);
+
+        Assert.NotNull(match);
+        Assert.Equal("https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/", match!.Link);
+    }
+
+    [Fact]
     public void ResolveDiscussionFeedUrl_PrefersReleaseMonitorDiscussionFeedUrl()
     {
         var config = new BotConfig
