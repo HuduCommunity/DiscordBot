@@ -117,6 +117,39 @@ public sealed class HuduReleaseMonitorServiceTests
     }
 
     [Fact]
+    public void HasMatchingCommunityAnnouncement_MatchesWhenMessageIncludesRoleMention()
+    {
+        var isMatch = HuduReleaseMonitorService.HasMatchingCommunityAnnouncementForTests(
+            "<@&12345> Community discussion thread for Release 2.44.2: https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/",
+            "2.44.2",
+            "https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/");
+
+        Assert.True(isMatch);
+    }
+
+    [Fact]
+    public void HasMatchingCommunityAnnouncement_MatchesIgnoringTrailingSlash()
+    {
+        var isMatch = HuduReleaseMonitorService.HasMatchingCommunityAnnouncementForTests(
+            "Community discussion thread for Release 2.44.2: https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live",
+            "2.44.2",
+            "https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/");
+
+        Assert.True(isMatch);
+    }
+
+    [Fact]
+    public void HasMatchingCommunityAnnouncement_DoesNotMatchDifferentReleaseVersion()
+    {
+        var isMatch = HuduReleaseMonitorService.HasMatchingCommunityAnnouncementForTests(
+            "Community discussion thread for Release 2.44.1: https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/",
+            "2.44.2",
+            "https://www.reddit.com/r/hudu/comments/1vh6dys/v2442_is_live/");
+
+        Assert.False(isMatch);
+    }
+
+    [Fact]
     public void ResolveLastPostedReleaseId_UsesBaselineWhenStateIsMissing()
     {
         var lastPostedReleaseId = HuduReleaseMonitorService.ResolveLastPostedReleaseIdForTests(null, 67);

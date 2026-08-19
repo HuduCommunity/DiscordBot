@@ -226,6 +226,11 @@ public class HuduCommunityFeedMonitorService : BackgroundService
                 message: sourceMessage);
 
             await thread.SendMessageAsync(openerText);
+            await thread.ModifyAsync(properties =>
+            {
+                properties.Archived = true;
+                properties.Locked = true;
+            });
         }
         catch (Exception ex)
         {

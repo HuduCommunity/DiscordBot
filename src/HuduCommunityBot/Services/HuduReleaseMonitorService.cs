@@ -434,6 +434,11 @@ public class HuduReleaseMonitorService : BackgroundService
                 message: sourceMessage);
 
             await thread.SendMessageAsync(openerText);
+            await thread.ModifyAsync(properties =>
+            {
+                properties.Archived = true;
+                properties.Locked = true;
+            });
         }
         catch (Exception ex)
         {
@@ -728,13 +733,68 @@ public class HuduReleaseMonitorService : BackgroundService
             : null;
 
         var threadMessage = $"{mentionText} Community discussion thread for Release {release.Name}: {communityPost.Link}".Trim();
-        var recentMessages = await thread.GetMessagesAsync(20).FlattenAsync();
-        if (recentMessages.Any(message => string.Equals(message.Content, threadMessage, StringComparison.Ordinal)))
+        var recentMessages = await thread.GetMessagesAsync(50).FlattenAsync();
+        if (recentMessages.Any(message => HasMatchingCommunityAnnouncement(message.Content, release.Name, communityPost.Link)))
         {
             return;
         }
 
         await thread.SendMessageAsync(threadMessage);
+    }
+
+    private static bool HasMatchingCommunityAnnouncement(string? content, string? releaseVersion, string? communityPostLink)
+    {
+        if (string.IsNullOrWhiteSpace(content) || string.IsNullOrWhiteSpace(releaseVersion) || string.IsNullOrWhiteSpace(communityPostLink))
+        {
+            return false;
+        }
+
+        var normalizedContent = content.Trim();
+        if (!normalizedContent.Contains($"release {releaseVersion}", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var targetUrl = NormalizeUrlForComparison(communityPostLink);
+        if (string.IsNullOrWhiteSpace(targetUrl))
+        {
+            return false;
+        }
+
+        var urls = Regex.Matches(normalizedContent, @"https?://\S+", RegexOptions.IgnoreCase)
+            .Select(match => NormalizeUrlForComparison(match.Value.TrimEnd('.', ',', ';', ')', ']', '>', '"', '\'')))
+            .Where(url => !string.IsNullOrWhiteSpace(url));
+
+        return urls.Any(url => string.Equals(url, targetUrl, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string NormalizeUrlForComparison(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = url.Trim();
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var parsedUri))
+        {
+            return trimmed.TrimEnd('/').ToLowerInvariant();
+        }
+
+        var uriBuilder = new UriBuilder(parsedUri)
+        {
+            Fragment = string.Empty
+        };
+
+        var path = uriBuilder.Uri.GetLeftPart(UriPartial.Path).TrimEnd('/').ToLowerInvariant();
+        var query = uriBuilder.Query;
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return path;
+        }
+
+        return string.Concat(path, query.ToLowerInvariant());
     }
 
     private static string? ExtractElementValue(XElement parent, string elementName)
@@ -954,6 +1014,11 @@ public class HuduReleaseMonitorService : BackgroundService
     internal static bool ShouldRetroactivelyUpdateExistingReleasePostForTests(string? currentUrl, string? desiredUrl)
     {
         return ShouldRetroactivelyUpdateExistingReleasePost(currentUrl, desiredUrl);
+    }
+
+    internal static bool HasMatchingCommunityAnnouncementForTests(string? content, string? releaseVersion, string? communityPostLink)
+    {
+        return HasMatchingCommunityAnnouncement(content, releaseVersion, communityPostLink);
     }
 
     internal static int ResolveLastPostedReleaseIdForTests(string? lastPostedItemId, int baselineReleaseId)
