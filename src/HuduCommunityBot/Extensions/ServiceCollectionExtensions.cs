@@ -91,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(botConfig);
 
         var modLogConfig = configuration.GetSection("ModerationLog").Get<ModerationLogConfig>() ?? new ModerationLogConfig();
+        _ = ModerationLogService.BuildModeratorRoleFooter(modLogConfig);
         services.AddSingleton(modLogConfig);
 
         var spamConfig = configuration.GetSection("CrossChannelSpam").Get<CrossChannelSpamConfig>() ?? new CrossChannelSpamConfig();
@@ -166,4 +167,3 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
-
