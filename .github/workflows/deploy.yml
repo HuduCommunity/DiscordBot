@@ -144,6 +144,11 @@ jobs:
         'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__RoleId=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_ROLE_ID || '0' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__FeedUrl=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_FEED_URL || 'https://community.hudu.com/rss/feed' }}' \
         'HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__PollIntervalMinutes=${{ secrets.HUDU_COMMUNITY_FEED_MONITOR_POLL_INTERVAL_MINUTES || '15' }}' \
+        'HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Enabled=${{ secrets.GITHUB_MONITOR_ENABLED || 'false' }}' \
+        'HUDUCOMMUNITYBOT_Bot__GitHubMonitor__DefaultChannelId=${{ secrets.GITHUB_MONITOR_DEFAULT_CHANNEL_ID || '0' }}' \
+        'HUDUCOMMUNITYBOT_Bot__GitHubMonitor__RoleId=${{ secrets.GITHUB_MONITOR_ROLE_ID || '0' }}' \
+        'HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Token=${{ secrets.GITHUB_MONITOR_TOKEN }}' \
+        'HUDUCOMMUNITYBOT_Bot__GitHubMonitor__PollIntervalMinutes=${{ secrets.GITHUB_MONITOR_POLL_INTERVAL_MINUTES || '10' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__Enabled=${{ secrets.YOUTUBE_MONITOR_ENABLED || 'false' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__ForumChannelId=${{ secrets.YOUTUBE_FORUM_CHANNEL_ID || '0' }}' \
         'HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId=${{ secrets.YOUTUBE_MONITOR_ROLE_ID || '0' }}' \
@@ -223,4 +228,3 @@ jobs:
     - name: Cleanup SSH key
       if: always()
       run: rm -f ~/.ssh/deploy_key
-

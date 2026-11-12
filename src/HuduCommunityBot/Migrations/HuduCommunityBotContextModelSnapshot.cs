@@ -15,7 +15,7 @@ namespace HuduCommunityBot.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
             modelBuilder.Entity("DiscordBot.Models.FeedPostState", b =>
                 {
@@ -48,6 +48,115 @@ namespace HuduCommunityBot.Migrations
                         .IsUnique();
 
                     b.ToTable("FeedPostStates");
+                });
+
+            modelBuilder.Entity("DiscordBot.Models.GitHubMonitorSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<ulong>("DefaultChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Enabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("PollIntervalMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(10);
+
+                    b.Property<ulong>("RoleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GitHubMonitorSettings");
+                });
+
+            modelBuilder.Entity("DiscordBot.Models.GitHubTrackedRepository", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ActionsChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ActionsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<ulong>("IssuesChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IssuesEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("PullRequestsChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PullRequestsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<ulong>("ReleasesChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ReleasesEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Owner", "Name")
+                        .IsUnique();
+
+                    b.ToTable("GitHubTrackedRepositories");
                 });
 
             modelBuilder.Entity("DiscordBot.Models.ModLogThreadLink", b =>

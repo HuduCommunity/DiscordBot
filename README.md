@@ -152,6 +152,14 @@ All settings live under the `Bot` key in `appsettings.json`:
       "DefaultPostTitleTemplate": "[{ChannelName}] {VideoTitle}",
       "Channels": []
     },
+    "GitHubMonitor": {
+      "Enabled": false,
+      "DefaultChannelId": 0,
+      "RoleId": 0,
+      "Token": "",
+      "PollIntervalMinutes": 10,
+      "Repositories": []
+    },
     "Heartbeat": {
       "Enabled": false,
       "PushUrl": "",
@@ -225,6 +233,27 @@ Set `HuduCommunityFeedMonitor:Enabled` to `true` and configure:
 Community feed state is persisted in SQLite using `FeedPostState` (`FeedType = HuduCommunityRss`) with item GUID/link markers.
 
 On first run, the monitor stores the latest current item as baseline to avoid posting historical backlog.
+
+### GitHub Repository Monitor
+
+The GitHub monitor polls tracked repositories for issues, pull requests, completed GitHub Actions runs, and releases. It starts disabled. Configure `GitHubMonitor:DefaultChannelId` as the fallback channel and optionally set `RoleId`, `Token`, and `PollIntervalMinutes` (`5` minutes minimum). A GitHub token is optional; without one, the API limit is 60 requests per hour.
+
+Repository configuration is managed with the administrator-only `/github` commands and persisted in SQLite:
+
+| Command | Description |
+| --- | --- |
+| `/github enable` | Enable or disable monitoring globally |
+| `/github set-default-channel` | Set the fallback notification channel |
+| `/github set-role` | Set or clear the optional notification role |
+| `/github set-interval` | Set polling interval (5–1440 minutes) |
+| `/github add-repo` | Track a repository using `owner/name` or its GitHub URL |
+| `/github remove-repo` | Stop tracking a repository |
+| `/github toggle` | Enable/disable a repository category and optionally route it to a channel |
+| `/github set-category-channel` | Set or clear a category-specific channel |
+| `/github set-repo-enabled` | Enable or disable polling for a repository |
+| `/github list` | Show global and repository settings |
+
+Issues, pull requests, and releases are enabled for a new repository by default; Actions notifications are disabled. The monitor records per-category baselines on its first poll to avoid sending historical items. A startup `Repositories` list can seed initial repositories, but subsequent configuration is managed by the slash commands.
 
 ### YouTube Monitor
 
@@ -419,6 +448,11 @@ HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__YouTubeDataApiKey=your-youtube-data-api-ke
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__PollIntervalMinutes=15
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostTitleTemplate=[{ChannelName}] {VideoTitle}
 HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__DefaultPostBodyTemplate=New video from **{ChannelName}**\n{VideoUrl}
+HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Enabled=true
+HUDUCOMMUNITYBOT_Bot__GitHubMonitor__DefaultChannelId=1234567890
+HUDUCOMMUNITYBOT_Bot__GitHubMonitor__RoleId=1234567890
+HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Token=your-github-token
+HUDUCOMMUNITYBOT_Bot__GitHubMonitor__PollIntervalMinutes=10
 HUDUCOMMUNITYBOT_Bot__Heartbeat__Enabled=true
 HUDUCOMMUNITYBOT_Bot__Heartbeat__PushUrl=https://kuma.example.com/api/push/xxxxx
 HUDUCOMMUNITYBOT_Bot__Heartbeat__IntervalSeconds=60
@@ -503,6 +537,11 @@ If you deploy with `.github/workflows/deploy.yml`, configure these repository se
 | `HUDU_COMMUNITY_FEED_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__RoleId` |
 | `HUDU_COMMUNITY_FEED_MONITOR_FEED_URL` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__FeedUrl` |
 | `HUDU_COMMUNITY_FEED_MONITOR_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__HuduCommunityFeedMonitor__PollIntervalMinutes` |
+| `GITHUB_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Enabled` |
+| `GITHUB_MONITOR_DEFAULT_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__GitHubMonitor__DefaultChannelId` |
+| `GITHUB_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__GitHubMonitor__RoleId` |
+| `GITHUB_MONITOR_TOKEN` | `HUDUCOMMUNITYBOT_Bot__GitHubMonitor__Token` |
+| `GITHUB_MONITOR_POLL_INTERVAL_MINUTES` | `HUDUCOMMUNITYBOT_Bot__GitHubMonitor__PollIntervalMinutes` |
 | `YOUTUBE_MONITOR_ENABLED` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__Enabled` |
 | `YOUTUBE_FORUM_CHANNEL_ID` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__ForumChannelId` |
 | `YOUTUBE_MONITOR_ROLE_ID` | `HUDUCOMMUNITYBOT_Bot__YoutubeMonitor__RoleId` |

@@ -11,6 +11,7 @@ public class BotConfig
     public HuduReleaseMonitorConfig HuduReleaseMonitor { get; set; } = new();
     public HuduCommunityFeedMonitorConfig HuduCommunityFeedMonitor { get; set; } = new();
     public YoutubeMonitorConfig YoutubeMonitor { get; set; } = new();
+    public GitHubMonitorConfig GitHubMonitor { get; set; } = new();
     public HeartbeatConfig Heartbeat { get; set; } = new();
 
     /// <summary>
@@ -29,6 +30,7 @@ public class BotConfig
         HuduReleaseMonitor.Validate();
         HuduCommunityFeedMonitor.Validate();
         YoutubeMonitor.Validate();
+        GitHubMonitor.Validate();
         Heartbeat.Validate();
     }
 }
