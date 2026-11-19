@@ -159,6 +159,30 @@ namespace HuduCommunityBot.Migrations
                     b.ToTable("GitHubTrackedRepositories");
                 });
 
+            modelBuilder.Entity("DiscordBot.Models.GitHubWorkflowSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RepositoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Workflow")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepositoryId", "Workflow", "ChannelId")
+                        .IsUnique();
+
+                    b.ToTable("GitHubWorkflowSubscriptions");
+                });
+
             modelBuilder.Entity("DiscordBot.Models.ModLogThreadLink", b =>
                 {
                     b.Property<int>("Id")
@@ -367,6 +391,15 @@ namespace HuduCommunityBot.Migrations
                         .IsUnique();
 
                     b.ToTable("YoutubeTrackedChannels");
+                });
+
+            modelBuilder.Entity("DiscordBot.Models.GitHubWorkflowSubscription", b =>
+                {
+                    b.HasOne("DiscordBot.Models.GitHubTrackedRepository", null)
+                        .WithMany()
+                        .HasForeignKey("RepositoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DiscordBot.Models.SingleMessageRecord", b =>
