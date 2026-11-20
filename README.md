@@ -259,6 +259,8 @@ Issues, pull requests, and releases are enabled for a new repository by default;
 
 To monitor only a specific workflow in a channel, add the repository, disable unwanted categories with `/github toggle`, then use `/github add-workflow` with the workflow's file name from `.github/workflows` (for example `deploy-next.yml`) or its numeric GitHub workflow ID. Enable monitoring with `/github enable true`. Each workflow/channel subscription has its own first-poll baseline and reports completed workflow runs, not individual jobs. It works even when the repository-wide Actions category is off; if that category is on, both notifications can be sent. Disabling or removing the repository also disables or removes its workflow subscriptions. Each subscription makes an additional API request per poll and reads the 20 most recent runs. Private repositories require a token with Actions read permission.
 
+Successful run notifications include available deployment environment links when the deployment status log URL identifies the run. Discovering links requires additional deployment and deployment-status API requests and, for private repositories, Deployments read permission. If deployment lookup fails, the run is still posted and the failure is logged.
+
 ### YouTube Monitor
 
 Set `YoutubeMonitor:Enabled` to `true` and configure:
